@@ -5,6 +5,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	server: {
+		open: false,
 		port: 5176,
 	},
 	plugins: [tailwindcss(), sveltekit()],

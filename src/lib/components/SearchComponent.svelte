@@ -1,83 +1,39 @@
 <script lang="ts">
 	import { browser } from "$app/environment";
+	import { invoke } from "@tauri-apps/api/core";
 	import {
 		previousSearchesWritable,
 		searchQueryWritable,
-	} from "$lib/store.ts";
+	} from "$lib/store.js";
 
 	let searchQuery: string = $state("");
-	// let { selectedSubject, pdfBookTitles, onsearchResults, onloadingChange } = $props();
-	let { selectedSubject } = $props();
+	let { onsearchResults, onloadingChange } = $props();
 	let showDropdown = $state(false);
 	let loading: boolean = $state(false);
 
+
+	// Replace the existing handleSearchDispatch function with this updated version:
 	async function handleSearchDispatch() {
+		console.log("**********handleSearchDispatch*************");
+
 		searchQueryWritable.set(searchQuery);
 
-		const normPdfTitles: string[] = [...pdfBookTitles];
-		console.log(
-			"normPdfTitles:",
-			normPdfTitles,
-			"length:",
-			normPdfTitles.length,
-		);
-
-		// Check if both search query and PDFs are missing
-		if (!searchQuery.trim() && normPdfTitles.length == 0) {
-			console.error("Both search query and PDFs are missing");
-			onsearchResults?.("noSearchTermAndNoPdfs");
-			return;
-		}
-
-		// Check if no PDFs are selected (but search query exists)
-		if (normPdfTitles.length == 0) {
-			onsearchResults?.("noPdfCheckBoxesChecked");
-			return;
-		}
-
-		// Check if PDFs are selected but no search query is provided
 		if (!searchQuery.trim()) {
-			console.error("Search query is empty but PDFs are selected");
-			onsearchResults?.("noSearchTerm");
-			return;
-		}
-
-		// Check if too many PDFs are selected
-		if (normPdfTitles.length > pdfLimit) {
-			onsearchResults?.("pdfsOverLimit");
+			console.error("Search Query is Missing");
+			onsearchResults?.("noSearchTermAndNoPdfs");
 			return;
 		}
 
 		updateSearch(searchQuery);
 
-		const payload = {
-			selectedSubject,
-			searchQuery,
-			pdfBookTitles,
-		};
-		console.log("Payload before fetch:", payload);
-		console.log("JSON Payload:", JSON.stringify(payload));
-
 		try {
 			loading = true;
 			onloadingChange?.(loading);
 
-			const response = await fetch(`/api/searchquery`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(payload),
-			});
-
-			if (!response.ok) {
-				console.log("Server error: in response ok false");
-				throw new Error(`Server error: ${response.status}`);
-			}
-
-			const result: any = await response.json();
-
-			console.log("Search results:", result);
+		// invoke(command_name, { argument_name: value })
+			// Calls search_brave(query: String) in lib.rs
+			const response = await invoke<string>("search_brave", { query: searchQuery });
+			const result = JSON.parse(response);
 
 			loading = false;
 			onloadingChange?.(loading);
@@ -85,7 +41,6 @@
 
 			// Clear input and hide dropdown after successful search
 			searchQuery = "";
-			showDropdown = false;
 		} catch (error) {
 			console.error("Error in handleSearch:", error);
 			loading = false;
@@ -98,16 +53,6 @@
 		if ($previousSearchesWritable.length > 0) {
 			showDropdown = true;
 		}
-	};
-
-	/**
-	 * Handles selecting a search term from the dropdown.
-	 * @param {string} term - The search term selected
-	 */
-	const handleSelectSearch = (term: string) => {
-		console.log("Selected:", term);
-		searchQuery = term; // Populate input with selected term
-		showDropdown = false; // Hide dropdown
 	};
 
 	const handleClickOutside = (event: Event) => {
@@ -125,19 +70,6 @@
 		}
 	};
 
-	function handleInputKeydown(event: KeyboardEvent) {
-		if (event.key === "Enter") {
-			console.log("Enter key pressed");
-			handleSearchDispatch();
-		}
-	}
-
-	const handleDelete = (searchTerm: string) => {
-		previousSearchesWritable.update((searches) => {
-			return searches.filter((term) => term !== searchTerm);
-		});
-	};
-
 	function updateSearch(searchWord: string): void {
 		previousSearchesWritable.update((searches: string[]) => {
 			if (!searches.includes(searchWord)) {
@@ -148,10 +80,19 @@
 		console.log($previousSearchesWritable);
 	}
 
+	// When clicking enter execute handleSearchDispatch
+	function handleInputKeydown(event: KeyboardEvent) {
+		if (event.key === "Enter") {
+			console.log("Enter key pressed");
+			handleSearchDispatch();
+		}
+	}
+
 	// Close dropdown if clicked outside
 	if (browser) {
 		window.addEventListener("click", handleClickOutside);
 	}
+
 </script>
 
 <div class="search-bar h-10 flex gap-1 relative w-[90%] max-w-[600px] mx-auto 
@@ -171,33 +112,14 @@
 	<!-- Search Button -->
 	<button 
 		on:click={handleSearchDispatch}
-	class="bg-blue-600 hover:bg-blue-800 text-black px-1 py-1 rounded font-comic shadow-soft cursor-pointer"
-	>Search</button>
+		class="bg-blue-600 hover:bg-blue-800 text-black px-1 py-1 rounded font-comic 
+		shadow-soft cursor-pointer">Search
+	</button>
 
 	{#if loading}
 		<div class="spinner"></div>
 	{/if}
 
-	<!-- Dropdown Menu -->
-	{#if showDropdown && $previousSearchesWritable.length > 0}
-		<ul id="search-dropdn" class="dropdn-menu absolute bg-white top-full left-0 rounded 
-								w-[calc(100%-5px-110px)] list-none py-1 m-0 z-10 shadow-md">
-			{#each $previousSearchesWritable as term}
-				<li 
-					on:click={() => handleSelectSearch(term)}
-					class="text-xl bg-gray-50 hover:bg-gray-200 p-2 border border-black 
-						rounded mx-1 my-0.5 cursor-pointer flex justify-between items-center"
-				>
-					<span>{term}</span>
-					<button
-						class="searchquery-delete bg-red-500 hover:bg-red-700 text-black px-1 
-						rounded text-sm cursor-pointer"
-						on:click|stopPropagation={() => handleDelete(term)}
-						>X</button
-					>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+
 </div>
 
