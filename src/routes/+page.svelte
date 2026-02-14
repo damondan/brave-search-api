@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SearchComponent from '$lib/components/SearchComponent.svelte';
+	import SearchParams from '$lib/components/SearchParams.svelte';
 	import {
 		 webResults, 
 		 videoResults, 
@@ -13,6 +14,10 @@
 	let leftOpen = $state(false);
 	let rightOpen = $state(false);
 	let isLoading = $state(false);
+
+	function leftSidebar (){
+		leftOpen = !leftOpen;
+	}
 
 	function handleLoadBraveWebSearch(results:BraveSearchResponse){
 		const theResults = parseSearchResponse(results);
@@ -36,11 +41,28 @@
 	/>
 
 	<div class="flex flex-1">
-		<!-- Left Sidebar -->
-		<div class="overflow-hidden transition-all duration-300 {leftOpen ? 'w-[10%]' : 'w-0'}"></div>
+	<!-- Left Sidebar + Toggle -->
+	<div class="flex h-full mr-1">
+		<!-- Collapsible content -->
+		<div class="h-full overflow-hidden transition-all duration-300 bg-gray-800
+			{leftOpen ? 'w-48' : 'w-0'}">
+			<div class="w-48 p-1">
+				<!-- Sidebar content here -->
+				 <SearchParams/>
+			</div>
+		</div>
+		
+		<!-- Toggle button (always visible) -->
+		<button 
+			class="w-6 bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center cursor-pointer"
+			onclick={leftSidebar}
+		>
+			{leftOpen ? '◀' : '▶'}
+		</button>
+	</div>
 
 		<!-- Main Content -->
-		<div class="flex-1 overflow-y-auto border border-amber-600">
+		<div class="flex-1 overflow-y-auto">
 			 {#if isLoading}
 				<div class="spinner-overlay tw-spinner-overlay">
 					<div class="spinner custom-spinner"></div>
