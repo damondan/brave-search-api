@@ -1,48 +1,68 @@
 <script lang="ts">
-	import { browser } from "$app/environment";
-	import { invoke } from "@tauri-apps/api/core";
-	import {
+	import { browser } from '$app/environment';
+	import { invoke } from '@tauri-apps/api/core';
+	import { XtraSnippets, type BraveSearchResponse } from '$lib/types/brave';
+import {
 		previousSearchesWritable,
 		searchQueryWritable,
-	} from "$lib/store.js";
+		countStore,
+		extraSnippetsStore,
+		fetchMetadataStore,
+		gogglesStore,
+		safesearchStore,
+		freshnessStore,
+		countryStore,
+		languageStore
+	} from '$lib/store';
 
-	let searchQuery: string = $state("");
+	let searchQuery: string = $state('');
 	let { onsearchResults, onloadingChange } = $props();
 	let showDropdown = $state(false);
 	let loading: boolean = $state(false);
 
-
 	// Replace the existing handleSearchDispatch function with this updated version:
 	async function handleSearchDispatch() {
-		console.log("**********handleSearchDispatch*************");
-
+		console.log('**********handleSearchDispatch*************');
 		searchQueryWritable.set(searchQuery);
-
+//const extraSnippetsStr = $extraSnippetsStore ? "true" : "false";
 		if (!searchQuery.trim()) {
-			console.error("Search Query is Missing");
-			onsearchResults?.("noSearchTermAndNoPdfs");
+			console.error('Search Query is Missing');
+			onsearchResults?.('noSearchTermAndNoPdfs');
 			return;
 		}
 
 		updateSearch(searchQuery);
-
+		//console.log("Extra Snippets is " + extraSnippetsStr);
+		console.log("Extra Snippets is " + $extraSnippetsStore);
 		try {
 			loading = true;
 			onloadingChange?.(loading);
 
-		// invoke(command_name, { argument_name: value })
-			// Calls search_brave(query: String) in lib.rs
-			const response = await invoke<string>("search_brave", { query: searchQuery });
-			const result = JSON.parse(response);
+
+
+			// invoke(command_name, { argument_name: value })
+			// Calls search_brave in lib.rs with all params
+			const response = await invoke<string>('search_brave', {
+				query: searchQuery,
+				count: $countStore > 0 ? $countStore : null,
+				extraSnippets: $extraSnippetsStore,
+				country: $countryStore,
+				language: $languageStore,
+				safesearch: $safesearchStore,
+				freshness: $freshnessStore,
+				goggles: $gogglesStore,
+				fetchMetadata: $fetchMetadataStore
+			});
+			const raw: BraveSearchResponse = JSON.parse(response);
 
 			loading = false;
 			onloadingChange?.(loading);
-			onsearchResults?.(result);
+			onsearchResults?.(raw);
 
 			// Clear input and hide dropdown after successful search
-			searchQuery = "";
+			searchQuery = '';
 		} catch (error) {
-			console.error("Error in handleSearch:", error);
+			console.error('Error in handleSearch:', error);
 			loading = false;
 			onloadingChange?.(loading);
 		}
@@ -50,22 +70,20 @@
 
 	// Show dropdown if there are previous searches
 	const handleInputClick = () => {
+		console.log('handleInputClick Fired');
 		if ($previousSearchesWritable.length > 0) {
+			console.log('previous searches is true');
 			showDropdown = true;
 		}
 	};
 
 	const handleClickOutside = (event: Event) => {
-		console.log("nadleCLickOutside");
-		const dropdown = document.getElementById("search-dropdn");
-		const inputField = document.getElementById("search");
+		console.log('handleClickOutside');
+		const dropdown = document.getElementById('prevSearchDropDn');
+		const inputField = document.getElementById('search');
 		const target = event.target as Node;
-		if (
-			dropdown &&
-			inputField &&
-			!dropdown.contains(target) &&
-			!inputField.contains(target)
-		) {
+		if (dropdown && inputField && !dropdown.contains(target) && !inputField.contains(target)) {
+			console.log('handleClickOutside and showDropdown is false');
 			showDropdown = false;
 		}
 	};
@@ -82,21 +100,34 @@
 
 	// When clicking enter execute handleSearchDispatch
 	function handleInputKeydown(event: KeyboardEvent) {
-		if (event.key === "Enter") {
-			console.log("Enter key pressed");
+		if (event.key === 'Enter') {
+			console.log('Enter key pressed');
 			handleSearchDispatch();
 		}
 	}
 
-	// Close dropdown if clicked outside
-	if (browser) {
-		window.addEventListener("click", handleClickOutside);
+	const deleteSearchItem = (index: number) => {
+		previousSearchesWritable.update((items) => {
+			return items.filter((_, i) => i !== index);
+		})
 	}
 
+	function prevSearchGo(prev:string){
+		searchQuery = prev;
+		showDropdown = false;
+		//handleSearchDispatch();
+	}
+
+	// Close dropdown if clicked outside
+	if (browser) {
+		window.addEventListener('click', handleClickOutside);
+	}
 </script>
 
-<div class="search-bar h-10 flex gap-1 relative w-[90%] max-w-[600px] mx-auto 
-			shadow-soft">
+<div
+	class="search-bar shadow-soft relative mx-auto w-[90%] max-w-[600px]
+			gap-1"
+>
 	<!-- Input Field with Click Event -->
 	<input
 		type="text"
@@ -104,22 +135,33 @@
 		name="search"
 		placeholder="Search..."
 		bind:value={searchQuery}
-		on:click={handleInputClick}
-		on:keydown={handleInputKeydown}
+		onclick={handleInputClick}
+		onkeydown={handleInputKeydown}
 		autocomplete="off"
-	class="flex-grow font-comic text-black p-2 border border-gray-300 rounded"/>
+		class="font-comic w-[80%] rounded border border-gray-300 p-2 text-black"
+	/>
 
 	<!-- Search Button -->
-	<button 
-		on:click={handleSearchDispatch}
-		class="bg-blue-600 hover:bg-blue-800 text-black px-1 py-1 rounded font-comic 
-		shadow-soft cursor-pointer">Search
+	<button
+		onclick={handleSearchDispatch}
+		class="font-comic shadow-soft cursor-pointer rounded bg-blue-600 px-1 py-1
+		text-white hover:bg-blue-800"
+		>Search
 	</button>
-
 	{#if loading}
 		<div class="spinner"></div>
 	{/if}
 
-
+	{#if showDropdown}
+		<div id="prevSearchDropDn" class="absolute z-50 w-[80%] rounded border bg-white shadow">
+			{#each $previousSearchesWritable as prev, i (i)}
+				<div class="w-full border-3 border-amber-500 px-4 py-2 hover:bg-gray-100" onclick={() => prevSearchGo(prev)}>
+					<span>{prev}</span>
+					<button class="float-right text-white hover:text-red-700 bg-red-500" onclick={(e)=>{e.stopPropagation(); deleteSearchItem(i)}}>
+						✕
+					</button>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
-

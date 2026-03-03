@@ -2,8 +2,17 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Navigation from '$lib/components/Navigation.svelte';
+	import { onMount } from 'svelte';
+	import { loadBraveSearchData, initPersistence } from "$lib/persistence";
 
 	let { children } = $props();
+
+	onMount(() => {
+		loadBraveSearchData().then(() => {
+			// Initialize auto-save after loading
+			initPersistence();
+		});
+	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
