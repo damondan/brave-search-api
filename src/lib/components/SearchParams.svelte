@@ -14,6 +14,7 @@
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 import {
 		countStore,
+		offSetStore,
 		extraSnippetsStore,
 		fetchMetadataStore,
 		gogglesStore,
@@ -33,6 +34,7 @@ import {
 
 <div class="mb-1">
 	<div class="flex items-center gap-2 mb-4">
+		<label class="text-red-600">C</label>
 		<input
 			type="number"
 			min="0"
@@ -46,7 +48,20 @@ import {
 				[&::-webkit-inner-spin-button]:h-8 [&::-webkit-inner-spin-button]:w-6
 				[&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-inner-spin-button]:cursor-pointer"
 		/>
-		<!-- <label class="text-red-600">Count (1-15):</label> -->
+		<label class="text-red-600">O</label>
+		 <input
+			type="number"
+			min="0"
+			max="15"
+			value={$offSetStore}
+			onchange={(e) => {
+				const val = parseInt(e.currentTarget.value) || 0;
+				offSetStore.set(Math.min(9, Math.max(0, val)));
+			}}
+			class="w-16 h-10 text-center text-lg text-black rounded border border-gray-300 p-1
+				[&::-webkit-inner-spin-button]:h-8 [&::-webkit-inner-spin-button]:w-6
+				[&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-inner-spin-button]:cursor-pointer"
+		/>
 	</div>
 	<div class="flex flex-col gap-2 mb-4">
 		<Checkbox checked={$extraSnippetsStore} onchange={() => extraSnippetsStore.update(v => !v)}>

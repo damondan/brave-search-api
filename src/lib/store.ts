@@ -7,6 +7,7 @@ export const previousSearchesWritable = writable<string[]>([]);
 
 // Search params stores
 export const countStore = writable<number>(0);
+export const offSetStore = writable<number>(0);
 export const extraSnippetsStore = writable<boolean>(false);
 export const fetchMetadataStore = writable<boolean>(false);
 export const gogglesStore = writable<boolean>(false);

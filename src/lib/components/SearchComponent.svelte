@@ -6,6 +6,7 @@ import {
 		previousSearchesWritable,
 		searchQueryWritable,
 		countStore,
+		offSetStore,
 		extraSnippetsStore,
 		fetchMetadataStore,
 		gogglesStore,
@@ -24,7 +25,6 @@ import {
 	async function handleSearchDispatch() {
 		console.log('**********handleSearchDispatch*************');
 		searchQueryWritable.set(searchQuery);
-//const extraSnippetsStr = $extraSnippetsStore ? "true" : "false";
 		if (!searchQuery.trim()) {
 			console.error('Search Query is Missing');
 			onsearchResults?.('noSearchTermAndNoPdfs');
@@ -45,6 +45,7 @@ import {
 			const response = await invoke<string>('search_brave', {
 				query: searchQuery,
 				count: $countStore > 0 ? $countStore : null,
+				offset: $offSetStore > 0 ? $offSetStore : null,
 				extraSnippets: $extraSnippetsStore,
 				country: $countryStore,
 				language: $languageStore,

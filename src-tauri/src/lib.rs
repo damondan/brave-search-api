@@ -13,6 +13,7 @@ use std::path::Path;
 async fn search_brave(
     query: String,
     count: Option<i32>,
+    offset: Option<i32>,
     extra_snippets: Option<bool>,
     country: Option<String>,
     language: Option<String>,
@@ -32,6 +33,11 @@ async fn search_brave(
     if let Some(c) = count {
         if c > 0 && c <= 15 {
             params.push(("count", c.to_string()));
+        }
+    }
+     if let Some(o) = offset {
+        if o > 0 && o <= 9 {
+            params.push(("offset", o.to_string()));
         }
     }
     if extra_snippets == Some(true) {
