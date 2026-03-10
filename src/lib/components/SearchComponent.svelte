@@ -1,27 +1,28 @@
+// SearchComponent.svelte
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { invoke } from '@tauri-apps/api/core';
-	import { XtraSnippets, type BraveSearchResponse } from '$lib/types/brave';
-import {
+	import { type BraveSearchResponse } from '$lib/types/braveInterfaces';
+	import {
 		previousSearchesWritable,
 		searchQueryWritable,
-		countStore,
-		offSetStore,
-		extraSnippetsStore,
-		fetchMetadataStore,
-		gogglesStore,
-		safesearchStore,
-		freshnessStore,
-		countryStore,
-		languageStore
-	} from '$lib/store';
+		webParamsStore,
+		newsParamsStore,
+		videosParamsStore,
+		imagesParamsStore,
+		type SearchType
+	} from '$lib/stores/searchTabParamsStore';
+	import { get } from 'svelte/store';
 
 	let searchQuery: string = $state('');
-	let { onsearchResults, onloadingChange } = $props();
+	// searchType: SearchType (required), onsearchResults: (results: BraveSearchResponse | string) => void, onloadingChange?: (loading: boolean) => void
+	let { searchType, onsearchResults, onloadingChange }: { searchType: SearchType, 
+		onsearchResults: (results: BraveSearchResponse | string) => void, onloadingChange?: (loading: boolean) => void } = $props();
+
 	let showDropdown = $state(false);
 	let loading: boolean = $state(false);
 
-	// Replace the existing handleSearchDispatch function with this updated version:
+	// handleSearchDispatch(): Promise<void>
 	async function handleSearchDispatch() {
 		console.log('**********handleSearchDispatch*************');
 		searchQueryWritable.set(searchQuery);
@@ -32,28 +33,70 @@ import {
 		}
 
 		updateSearch(searchQuery);
-		//console.log("Extra Snippets is " + extraSnippetsStr);
-		console.log("Extra Snippets is " + $extraSnippetsStore);
+		
+		// Build invoke params based on search type
+		let invokeParams: Record<string, unknown> = { query: searchQuery };
+		
+		if (searchType === 'web') {
+			const params = get(webParamsStore);
+			console.log(`[web] Extra Snippets: ${params.extraSnippets}`);
+			invokeParams = {
+				...invokeParams,
+				count: params.count > 0 ? params.count : null,
+				offset: params.offset > 0 ? params.offset : null,
+				extraSnippets: params.extraSnippets,
+				country: params.country,
+				language: params.language,
+				safesearch: params.safesearch,
+				freshness: params.freshness,
+				goggles: params.goggles,
+				fetchMetadata: params.fetchMetadata
+			};
+		} else if (searchType === 'news') {
+			const params = get(newsParamsStore);
+			console.log(`[news] Extra Snippets: ${params.extraSnippets}`);
+			invokeParams = {
+				...invokeParams,
+				count: params.count > 0 ? params.count : null,
+				offset: params.offset > 0 ? params.offset : null,
+				extraSnippets: params.extraSnippets,
+				country: params.country,
+				language: params.language,
+				safesearch: params.safesearch,
+				freshness: params.freshness,
+				goggles: params.goggles
+			};
+		} else if (searchType === 'videos') {
+			const params = get(videosParamsStore);
+			invokeParams = {
+				...invokeParams,
+				count: params.count > 0 ? params.count : null,
+				offset: params.offset > 0 ? params.offset : null,
+				country: params.country,
+				language: params.language,
+				safesearch: params.safesearch,
+				freshness: params.freshness,
+				spellcheck: params.spellcheck
+			};
+		} else if (searchType === 'images') {
+			const params = get(imagesParamsStore);
+			invokeParams = {
+				...invokeParams,
+				count: params.count > 0 ? params.count : null,
+				country: params.country,
+				language: params.language,
+				safesearch: params.safesearch,
+				spellcheck: params.spellcheck
+			};
+		}
+		
 		try {
 			loading = true;
 			onloadingChange?.(loading);
 
-
-
 			// invoke(command_name, { argument_name: value })
-			// Calls search_brave in lib.rs with all params
-			const response = await invoke<string>('search_brave', {
-				query: searchQuery,
-				count: $countStore > 0 ? $countStore : null,
-				offset: $offSetStore > 0 ? $offSetStore : null,
-				extraSnippets: $extraSnippetsStore,
-				country: $countryStore,
-				language: $languageStore,
-				safesearch: $safesearchStore,
-				freshness: $freshnessStore,
-				goggles: $gogglesStore,
-				fetchMetadata: $fetchMetadataStore
-			});
+			// Calls search_brave in lib.rs with params specific to search type
+			const response = await invoke<string>('search_brave', invokeParams);
 			const raw: BraveSearchResponse = JSON.parse(response);
 
 			loading = false;

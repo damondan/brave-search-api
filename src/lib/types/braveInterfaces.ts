@@ -1,4 +1,4 @@
-// src/lib/types/brave.ts
+// src/lib/types/braveInterfaces.ts
 
 export interface WebResult {
 	title: string;
@@ -34,6 +34,33 @@ export interface VideoResult {
 	thumbnail?: {
 		src: string;
 		original: string;
+	};
+}
+
+export interface ImagesResult {
+	type: string;
+	url: string;
+	title: string;
+	source: string;
+	page_age?: string;
+	thumbnail?: {
+		src: string;
+		original: string;
+		height?: number;
+		width?: number;
+	};
+	properties?: {
+		url: string;
+		height?: number;
+		width?: number;
+		format?: string;
+	};
+	meta_url?: {
+		scheme: string;
+		netloc: string;
+		hostname: string;
+		favicon: string;
+		path: string;
 	};
 }
 
@@ -96,6 +123,10 @@ export interface BraveSearchResponse {
 		type: string;
 		results: NewsResult[];
 	};
+	images?: {
+		type: string;
+		results: ImagesResult[];
+	};
 	discussions?: {
 		type: string;
 		results: DiscussionResult[];
@@ -118,6 +149,7 @@ export interface ParsedSearchResults {
 	web: WebResult[];
 	videos: VideoResult[];
 	news: NewsResult[];
+	images: ImagesResult[];
 	discussions: DiscussionResult[];
 	faq: FaqResult[];
 }
@@ -257,3 +289,49 @@ export const languages = [
 ] as const;
 
 export type Language = typeof languages[number]["key"];
+
+// =============================================================================
+// Tab-specific search params for UI stores
+// Based on Brave Search API documentation for each endpoint
+// =============================================================================
+
+// Base params shared by all search types
+export interface BaseParams {
+	count: number;       // max varies: web=20, news/videos=50, images=200
+	country: string;
+	language: string;
+	safesearch: SafeSearch | null;
+}
+
+// Web Search params (supports all features)
+export interface WebParams extends BaseParams {
+	offset: number;          // 0-9
+	freshness: Freshness | null;
+	extraSnippets: boolean;
+	goggles: boolean;
+	fetchMetadata: boolean;
+}
+
+// News Search params (similar to web, no fetchMetadata)
+export interface NewsParams extends BaseParams {
+	offset: number;          // 0-9
+	freshness: Freshness | null;
+	extraSnippets: boolean;
+	goggles: boolean;
+	includeMetaData: boolean;
+}
+
+// Video Search params (no extra_snippets, no goggles, has spellcheck)
+export interface VideoParams extends BaseParams {
+	offset: number;          // 0-9
+	freshness: Freshness | null;
+	spellcheck: boolean;
+}
+
+// Image Search params (no offset, no freshness, no extra_snippets, no goggles)
+export interface ImageParams extends BaseParams {
+	spellcheck: boolean;
+}
+
+// Union type for all tab params
+export type TabParams = WebParams | NewsParams | VideoParams | ImageParams;

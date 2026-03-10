@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { previousSearchesWritable } from './store';
+import { previousSearchesWritable } from './stores/searchTabParamsStore';
 import { get } from 'svelte/store';
 
 let saveTimeout: number | null = null;

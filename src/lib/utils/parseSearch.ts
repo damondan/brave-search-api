@@ -1,6 +1,6 @@
 // src/lib/utils/parseSearch.ts
 
-import type { BraveSearchResponse, ParsedSearchResults } from "$lib/types/brave";
+import type { BraveSearchResponse, ParsedSearchResults } from "$lib/types/braveInterfaces";
 
 /**
  * parseSearchResponse(raw: BraveSearchResponse): ParsedSearchResults
@@ -12,6 +12,7 @@ export function parseSearchResponse(raw: BraveSearchResponse): ParsedSearchResul
 		web: raw.web?.results ?? [],
 		videos: raw.videos?.results ?? [],
 		news: raw.news?.results ?? [],
+		images: raw.images?.results ?? [],
 		discussions: raw.discussions?.results ?? [],
 		faq: raw.faq?.results ?? []
 	};

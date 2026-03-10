@@ -81,6 +81,78 @@ async fn search_brave(
     Ok(body)
 }
 
+#[tauri::command(rename_all = "camelCase")]
+async fn search_news_brave(
+    query: String,
+    count: Option<i32>,
+    offset: Option<i32>,
+    extra_snippets: Option<bool>,
+    country: Option<String>,
+    language: Option<String>,
+    safesearch: Option<String>,
+    freshness: Option<String>,
+    goggles: Option<bool>,
+    include_fetch_metadata: Option<bool>,
+) -> Result<String, String> {
+    println!("Received query: {}", query);
+    println!("extra_snippets value: {:?}", extra_snippets);
+    let client = reqwest::Client::new();
+    let key = std::env::var("BRAVE_API_KEY").expect("BRAVE_API_KEY not set");
+
+    // Build query params dynamically
+    let mut params: Vec<(&str, String)> = vec![("q", query)];
+    
+    if let Some(c) = count {
+        if c > 0 && c <= 15 {
+            params.push(("count", c.to_string()));
+        }
+    }
+     if let Some(o) = offset {
+        if o > 0 && o <= 9 {
+            params.push(("offset", o.to_string()));
+        }
+    }
+    if extra_snippets == Some(true) {
+        params.push(("extra_snippets", "true".to_string()));
+    }
+    if let Some(c) = country {
+        params.push(("country", c));
+    }
+    if let Some(l) = language {
+        params.push(("search_lang", l));
+    }
+    if let Some(s) = safesearch {
+        params.push(("safesearch", s));
+    }
+    if let Some(f) = freshness {
+        print!("freshness is {}", f);
+        params.push(("freshness", f));
+    }
+    if goggles == Some(true) {
+        params.push(("goggles", "true".to_string()));
+    }
+    if include_fetch_metadata == Some(true) {
+        params.push(("result_filter", "include_fetch_metadata".to_string()));
+    }
+
+    println!("Query params: {:?}", params);
+
+    let response = client
+        .get("https://api.search.brave.com/res/v1/news/search")
+        .query(&params)
+        .header("Accept", "application/json")
+        .header("X-Subscription-Token", key)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    let body = response.text().await.map_err(|e| e.to_string())?;
+    
+    //println!("Response: {}", body);
+    
+    Ok(body)
+}
+
 //Persistence
 // Save/load brave user data
 fn get_brave_data_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
