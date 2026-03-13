@@ -1,4 +1,3 @@
-// SearchParams.svelte
 <svelte:options runes={true} />
 
 <script lang="ts">
@@ -20,6 +19,9 @@
 
 	// searchType: SearchType (required)
 	let { searchType }: { searchType: SearchType } = $props();
+
+	// Toggle state for search operators popup
+	let showOperators = $state(false);
 
 	// Determine which features are available for this search type
 	const hasOffset = searchType !== 'images';
@@ -218,4 +220,106 @@
 			</Dropdown>
 		</div>
 	</div>
+
+	<!-- More Button - 300px below Language label (approximately 18.75rem) -->
+	<div class="mt-[18.75rem] flex justify-center">
+		<button
+			class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800 cursor-pointer"
+			onclick={() => showOperators = !showOperators}
+		>
+			More
+		</button>
+	</div>
+
+	<!-- Search Operators Popup -->
+	{#if showOperators}
+		<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick={() => showOperators = false}>
+			<div class="bg-white rounded-lg p-6 w-[900px] max-h-[80vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+				<h2 class="text-xl font-bold mb-4 text-black">Search Operators</h2>
+				<div class="text-base text-black space-y-1">
+					<div class="grid grid-cols-3 gap-4 font-bold border-b-2 border-gray-300 pb-2">
+						<span>Operator</span>
+						<span>Purpose</span>
+						<span>Example</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">ext:</span>
+						<span>File extension</span>
+						<span class="font-mono">manual ext:pdf</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">filetype:</span>
+						<span>File type</span>
+						<span class="font-mono">report filetype:pdf</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">intitle:</span>
+						<span>Search in title</span>
+						<span class="font-mono">intitle:guide</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">inbody:</span>
+						<span>Search in body</span>
+						<span class="font-mono">inbody:"phrase"</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">inpage:</span>
+						<span>Title or body</span>
+						<span class="font-mono">inpage:keyword</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">lang:</span>
+						<span>Language filter</span>
+						<span class="font-mono">lang:es</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">loc:</span>
+						<span>Location filter</span>
+						<span class="font-mono">loc:ca</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">site:</span>
+						<span>Domain filter</span>
+						<span class="font-mono">site:example.com</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">+</span>
+						<span>Force inclusion</span>
+						<span class="font-mono">+required</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">-</span>
+						<span>Exclude term</span>
+						<span class="font-mono">-unwanted</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">""</span>
+						<span>Exact phrase</span>
+						<span class="font-mono">"exact phrase"</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">AND</span>
+						<span>Logical AND</span>
+						<span class="font-mono">term1 AND term2</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 border-b border-gray-200 py-1">
+						<span class="font-mono">OR</span>
+						<span>Logical OR</span>
+						<span class="font-mono">term1 OR term2</span>
+					</div>
+					<div class="grid grid-cols-3 gap-4 py-1">
+						<span class="font-mono">NOT</span>
+						<span>Logical NOT</span>
+						<span class="font-mono">term NOT excluded</span>
+					</div>
+				</div>
+				<button
+					class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-800 cursor-pointer"
+					onclick={() => showOperators = false}
+				>
+					Close
+				</button>
+			</div>
+		</div>
+	{/if}
 </div>

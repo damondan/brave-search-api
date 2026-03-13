@@ -1,4 +1,3 @@
-// SearchComponent.svelte
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { invoke } from '@tauri-apps/api/core';
@@ -96,6 +95,7 @@
 
 			// invoke(command_name, { argument_name: value })
 			// Calls search_brave in lib.rs with params specific to search type
+			const command = searchType === 'news' ? 'search_news_brave' : null;
 			const response = await invoke<string>('search_brave', invokeParams);
 			const raw: BraveSearchResponse = JSON.parse(response);
 
@@ -163,9 +163,10 @@
 	}
 
 	// Close dropdown if clicked outside
-	if (browser) {
-		window.addEventListener('click', handleClickOutside);
-	}
+	$effect(() => {
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <div

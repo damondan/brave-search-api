@@ -198,7 +198,7 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![search_brave,save_brave_data,load_brave_data])
+    .invoke_handler(tauri::generate_handler![search_brave,search_news_brave,save_brave_data,load_brave_data])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
