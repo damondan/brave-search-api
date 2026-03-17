@@ -15,8 +15,15 @@
 
 	let searchQuery: string = $state('');
 	// searchType: SearchType (required), onsearchResults: (results: BraveSearchResponse | string) => void, onloadingChange?: (loading: boolean) => void
-	let { searchType, onsearchResults, onloadingChange }: { searchType: SearchType, 
-		onsearchResults: (results: BraveSearchResponse | string) => void, onloadingChange?: (loading: boolean) => void } = $props();
+	let {
+		searchType,
+		onsearchResults,
+		onloadingChange
+	}: {
+		searchType: SearchType;
+		onsearchResults: (results: BraveSearchResponse | string) => void;
+		onloadingChange?: (loading: boolean) => void;
+	} = $props();
 
 	let showDropdown = $state(false);
 	let loading: boolean = $state(false);
@@ -32,10 +39,10 @@
 		}
 
 		updateSearch(searchQuery);
-		
+
 		// Build invoke params based on search type
 		let invokeParams: Record<string, unknown> = { query: searchQuery };
-		
+
 		if (searchType === 'web') {
 			const params = get(webParamsStore);
 			console.log(`[web] Extra Snippets: ${params.extraSnippets}`);
@@ -88,15 +95,21 @@
 				spellcheck: params.spellcheck
 			};
 		}
-		
 		try {
 			loading = true;
 			onloadingChange?.(loading);
 
 			// invoke(command_name, { argument_name: value })
-			// Calls search_brave in lib.rs with params specific to search type
-			const command = searchType === 'news' ? 'search_news_brave' : null;
-			const response = await invoke<string>('search_brave', invokeParams);
+			// Calls the appropriate Rust function based on search type
+			const commands: Record<string, string> = {
+				news: 'search_news_brave',
+				videos: 'search_videos_brave',
+				images: 'search_images_brave',
+				web: 'search_brave'
+			};
+			const command = commands[searchType] ?? 'search_brave';
+
+			const response = await invoke<string>(command, invokeParams);
 			const raw: BraveSearchResponse = JSON.parse(response);
 
 			loading = false;
@@ -153,10 +166,10 @@
 	const deleteSearchItem = (index: number) => {
 		previousSearchesWritable.update((items) => {
 			return items.filter((_, i) => i !== index);
-		})
-	}
+		});
+	};
 
-	function prevSearchGo(prev:string){
+	function prevSearchGo(prev: string) {
 		searchQuery = prev;
 		showDropdown = false;
 		//handleSearchDispatch();
@@ -164,9 +177,9 @@
 
 	// Close dropdown if clicked outside
 	$effect(() => {
-    window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
-});
+		window.addEventListener('click', handleClickOutside);
+		return () => window.removeEventListener('click', handleClickOutside);
+	});
 </script>
 
 <div
@@ -200,9 +213,18 @@
 	{#if showDropdown}
 		<div id="prevSearchDropDn" class="absolute z-50 w-[80%] rounded border bg-white shadow">
 			{#each $previousSearchesWritable as prev, i (i)}
-				<div class="w-full border-3 border-amber-500 px-4 py-2 hover:bg-gray-100" onclick={() => prevSearchGo(prev)}>
+				<div
+					class="w-full border-3 border-amber-500 px-4 py-2 hover:bg-gray-100"
+					onclick={() => prevSearchGo(prev)}
+				>
 					<span>{prev}</span>
-					<button class="float-right text-white hover:text-red-700 bg-red-500" onclick={(e)=>{e.stopPropagation(); deleteSearchItem(i)}}>
+					<button
+						class="float-right bg-red-500 text-white hover:text-red-700"
+						onclick={(e) => {
+							e.stopPropagation();
+							deleteSearchItem(i);
+						}}
+					>
 						✕
 					</button>
 				</div>

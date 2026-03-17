@@ -2,8 +2,17 @@
 <script lang="ts">
 	import type { NewsResult } from '$lib/types/braveInterfaces';
 	import { open } from '@tauri-apps/plugin-shell';
+	import { newsResults } from '$lib/stores/searchResultsStore';
 
-	let { results = [] }: { results: NewsResult[] } = $props();
+	let {
+		results,
+		selectedNewsResults,
+		onToggleSelection
+	}: {
+		results: NewsResult[];
+		selectedNewsResults: NewsResult[];
+		onToggleSelection: (news: NewsResult) => void;
+	} = $props();
 
 	function openLink(url: string) {
 		open(url);
@@ -11,32 +20,46 @@
 </script>
 
 {#if results.length === 0}
-	<div class="text-gray-400 p-4">No news results</div>
+	<div class="p-4 text-gray-400">No news results</div>
 {:else}
-	{#each results as news}
-		<div class="mb-6 flex gap-4">
-			{#if news.thumbnail?.src}
-				<img src={news.thumbnail.src} alt="" class="w-34 h-34 object-cover rounded" />
-			{/if}
-			<div class="flex-1">
-				<div class="font-semibold text-3xl">{@html news.title}</div>
-				{#if news.profile?.name}
-					<div class="text-2xl text-gray-500">{news.profile.name}</div>
-				{/if}
-				{#if news.page_age}
-					<div class="text-2xl text-gray-400">{news.page_age}</div>
-				{/if}
-				<div class="mt-1 text-2xl">{@html news.description}</div>
-				<a
-					href={news.url}
-					class="cursor-pointer text-blue-500 underline text-sm"
-					onclick={(e) => {
-						e.preventDefault();
-						openLink(news.url);
-					}}
+	{#each results as news, index}
+		<div class="mb-6">
+			<div class="flex items-start gap-2">
+				<input
+					type="checkbox"
+					class="mt-2"
+					checked={selectedNewsResults.some((r) => r.url == news.url)}
+					onchange={() => onToggleSelection(news)}
+				/>
+				<button
+					class="cursor-pointer text-2xl text-red-500 hover:text-red-700"
+					onclick={() => newsResults.update((results) => results.filter((_, i) => i != index))}
 				>
-					{news.url}
-				</a>
+					✕
+				</button>
+				{#if news.thumbnail?.src}
+					<img src={news.thumbnail.src} alt="" class="h-34 w-34 rounded object-cover" />
+				{/if}
+				<div class="flex-1">
+					<div class="text-3xl font-semibold">{@html news.title}</div>
+					{#if news.profile?.name}
+						<div class="text-2xl text-gray-500">{news.profile.name}</div>
+					{/if}
+					{#if news.page_age}
+						<div class="text-2xl text-gray-400">{news.page_age}</div>
+					{/if}
+					<div class="mt-1 text-2xl">{@html news.description}</div>
+					<a
+						href={news.url}
+						class="cursor-pointer text-sm text-blue-500 underline"
+						onclick={(e) => {
+							e.preventDefault();
+							openLink(news.url);
+						}}
+					>
+						{news.url}
+					</a>
+				</div>
 			</div>
 		</div>
 	{/each}
