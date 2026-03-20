@@ -471,7 +471,7 @@
 	<!-- Search Operators Popup -->
 	{#if showOperators}
 		<div
-			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			class="fixed inset-0 z-50 flex items-start pt-10 justify-center bg-black/50"
 			onclick={() => (showOperators = false)}
 		>
 			<div
