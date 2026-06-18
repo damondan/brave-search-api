@@ -5,7 +5,7 @@
 	import { save } from '@tauri-apps/plugin-dialog';
 	import { writeTextFile } from '@tauri-apps/plugin-fs';
 	import { webResults } from '$lib/stores/searchResultsStore';
-	import type { BraveSearchResponse, WebResult } from '$lib/types/braveInterfaces';
+	import type { SearchMain, WebResult } from '$lib/types/searchWebResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
@@ -23,10 +23,10 @@
 	}
 
 	// handleSearchResults(results: BraveSearchResponse): void
-	function handleSearchResults(results: BraveSearchResponse | string) {
+	function handleSearchResults(results: SearchMain | string) {
 		if (typeof results === 'string') return; // Handle error case
-		const theResults = parseSearchResponse(results);
-		webResults.set(theResults.web);
+		//const theResults = parseSearchResponse(results);
+		webResults.set(results.web.results);
 	}
 
 	// handleLoadingChange(loading: boolean): void
@@ -46,6 +46,10 @@
 		} else {
 			selectedWebResults = [...selectedWebResults, web];
 		}
+	}
+
+	function placementVoid(){
+		return;
 	}
 
 	async function downloadResults() {
@@ -92,7 +96,10 @@
 	</button>
 	<SearchComponent
 		{searchType}
-		onsearchResults={handleSearchResults}
+		onsearchWebResults={handleSearchResults}
+		onsearchNewsResults={placementVoid}
+		onsearchVidsResults={placementVoid}
+		onsearchImagesResults={placementVoid}
 		onloadingChange={handleLoadingChange}
 	/>
 
@@ -143,8 +150,8 @@
 							✕
 						</button>
 						<div class="flex-1">
-							<div class="text-3xl font-semibold">{@html web.title}</div>
-							<div class="text-2xl">{@html web.description}</div>
+							<div class="text-black text-3xl font-semibold">{@html web.title}</div>
+							<div class="text-black text-2xl">{@html web.description}</div>
 							{#if web.extra_snippets && web.extra_snippets.length > 0}
 								<div class="mt-2 border-l-2 border-gray-300 pl-4">
 									<div class="mb-1 text-xl text-gray-500">Additional snippets:</div>

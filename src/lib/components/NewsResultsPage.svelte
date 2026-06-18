@@ -1,6 +1,6 @@
 <!-- src/lib/components/NewsResults.svelte -->
 <script lang="ts">
-	import type { NewsResult } from '$lib/types/braveInterfaces';
+	import type { NewsResult } from '$lib/types/newsResultsInterface';
 	import { open } from '@tauri-apps/plugin-shell';
 	import { newsResults } from '$lib/stores/searchResultsStore';
 
@@ -41,14 +41,14 @@
 					<img src={news.thumbnail.src} alt="" class="h-34 w-34 rounded object-cover" />
 				{/if}
 				<div class="flex-1">
-					<div class="text-3xl font-semibold">{@html news.title}</div>
+					<div class="text-3xl font-semibold text-black">{@html news.title}</div>
 					{#if news.profile?.name}
 						<div class="text-2xl text-gray-500">{news.profile.name}</div>
 					{/if}
 					{#if news.page_age}
 						<div class="text-2xl text-gray-400">{news.page_age}</div>
 					{/if}
-					<div class="mt-1 text-2xl">{@html news.description}</div>
+					<div class="mt-1 text-2xl text-black">{@html news.description}</div>
 					<a
 						href={news.url}
 						class="cursor-pointer text-sm text-blue-500 underline"

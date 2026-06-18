@@ -1,14 +1,17 @@
 <script lang="ts">
 	import SearchComponent from '$lib/components/SearchComponent.svelte';
 	import SearchParams from '$lib/components/SearchParamsLtSlide.svelte';
+	import SearchDomain from '$lib/components/SearchDomainRtSlide.svelte';
 	import VideoResultsPage from '$lib/components/VideoResultsPage.svelte';
 	import { videoResults } from '$lib/stores/searchResultsStore';
-	import type { BraveSearchResponse, VideoResult } from '$lib/types/braveInterfaces';
+	import type {  } from '$lib/types/braveInterfaces';
+	import type { VideosResult } from '$lib/types/videoResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import { writeTextFile } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
+	import type { Video } from 'flowbite-svelte';
 
 	const searchType = 'videos' as const;
 
@@ -16,20 +19,25 @@
 	let isLoading = $state(false);
 	let rightOpen = $state(false);
 
-	let selectedVideosResults: VideoResult[] = $state([]);
+	let selectedVideosResults: VideosResult[] = $state([]);
 
 	function leftSidebar() {
 		leftOpen = !leftOpen;
 	}
 
-	// handleSearchResults(results: BraveSearchResponse | string): void
-	function handleSearchResults(results: BraveSearchResponse | string) {
-		if (typeof results === 'string') return;
-		const theResults = parseSearchResponse(results);
-		videoResults.set(theResults.videos);
+	function rightSidebar() {
+		rightOpen = !rightOpen;
 	}
 
-	function toggleSelection(vid: VideoResult) {
+	// handleSearchResults(results: BraveSearchResponse | string): void
+	function handleSearchResults(results: VideosResult[] | string) {
+		if (typeof results === 'string') return;
+		//const theResults = parseSearchResponse(results);
+		//videoResults.set(theResults.videos);
+		videoResults.set(results);
+	}
+
+	function toggleSelection(vid: VideosResult) {
 		const exists = selectedVideosResults.find((r) => r.url == vid.url);
 		if (exists) {
 			selectedVideosResults = selectedVideosResults.filter((r) => r.url != vid.url);
@@ -72,17 +80,25 @@
 	function handleLoadingChange(loading: boolean): void {
 		isLoading = loading;
 	}
+
+		function placementVoid(){
+		return;
+	}
+
 </script>
 
 <div class="flex flex-col">
 	<button
 		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
-		>Download
+		>Go
 	</button>
 	<SearchComponent
 		{searchType}
-		onsearchResults={handleSearchResults}
+		onsearchWebResults={placementVoid}
+		onsearchNewsResults={placementVoid}
+		onsearchVidsResults={handleSearchResults}
+		onsearchImagesResults={placementVoid}
 		onloadingChange={handleLoadingChange}
 	/>
 
@@ -124,6 +140,26 @@
 		</div>
 
 		<!-- Right Sidebar -->
-		<div class="overflow-hidden transition-all duration-300 {rightOpen ? 'w-[10%]' : 'w-0'}"></div>
+			<!-- Right Sidebar + Toggle -->
+		<div class="ml-auto flex h-screen">
+			<!-- Collapsible content -->
+			<div
+				class="h-full overflow-hidden bg-gray-200 transition-all duration-300
+			{rightOpen ? 'w-68' : 'w-0'}"
+			>
+				<div class="w-68 p-1">
+					<!-- Sidebar content here -->
+					<SearchDomain/>
+				</div>
+			</div>
+
+			<!-- Toggle button (always visible) -->
+			<button
+				class="flex w-6 cursor-pointer items-center justify-center bg-gray-700 text-white hover:bg-gray-600"
+				onclick={rightSidebar}
+			>
+				{rightOpen ? '▶' : '◀'}
+			</button>
+		</div>
 	</div>
 </div>

@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { invoke } from '@tauri-apps/api/core';
-	import { type BraveSearchResponse } from '$lib/types/braveInterfaces';
+	import { type SearchMain, type WebResult } from '$lib/types/searchWebResultsInterface';
+	import { type NewsResult } from '$lib/types/newsResultsInterface';
+	import { type VideosResult } from '$lib/types/videoResultsInterface';
+	import { type ImagesResult } from '$lib/types/imagesResultsInterface';
+
 	import {
 		previousSearchesWritable,
 		searchQueryWritable,
@@ -11,17 +15,24 @@
 		imagesParamsStore,
 		type SearchType
 	} from '$lib/stores/searchTabParamsStore';
+
 	import { get } from 'svelte/store';
 
 	let searchQuery: string = $state('');
 	// searchType: SearchType (required), onsearchResults: (results: BraveSearchResponse | string) => void, onloadingChange?: (loading: boolean) => void
 	let {
 		searchType,
-		onsearchResults,
+		onsearchWebResults,
+		onsearchNewsResults,
+		onsearchVidsResults,
+		onsearchImagesResults,
 		onloadingChange
 	}: {
 		searchType: SearchType;
-		onsearchResults: (results: BraveSearchResponse | string) => void;
+		onsearchWebResults: (searchWebResults: SearchMain | string) => void;
+		onsearchNewsResults: (newsResults: NewsResult[] | string) => void;
+		onsearchVidsResults: (vidsResults: VideosResult[] | string) => void;
+		onsearchImagesResults: (imageResults: ImagesResult[] | string) => void;
 		onloadingChange?: (loading: boolean) => void;
 	} = $props();
 
@@ -34,7 +45,7 @@
 		searchQueryWritable.set(searchQuery);
 		if (!searchQuery.trim()) {
 			console.error('Search Query is Missing');
-			onsearchResults?.('noSearchTermAndNoPdfs');
+			onsearchVidsResults?.('noSearchTermAndNoPdfs');
 			return;
 		}
 
@@ -43,81 +54,134 @@
 		// Build invoke params based on search type
 		let invokeParams: Record<string, unknown> = { query: searchQuery };
 
-		if (searchType === 'web') {
-			const params = get(webParamsStore);
-			console.log(`[web] Extra Snippets: ${params.extraSnippets}`);
-			invokeParams = {
-				...invokeParams,
-				count: params.count > 0 ? params.count : null,
-				offset: params.offset > 0 ? params.offset : null,
-				extraSnippets: params.extraSnippets,
-				country: params.country,
-				language: params.language,
-				safesearch: params.safesearch,
-				freshness: params.freshness,
-				goggles: params.goggles,
-				fetchMetadata: params.fetchMetadata
-			};
-		} else if (searchType === 'news') {
-			const params = get(newsParamsStore);
-			console.log(`[news] Extra Snippets: ${params.extraSnippets}`);
-			invokeParams = {
-				...invokeParams,
-				count: params.count > 0 ? params.count : null,
-				offset: params.offset > 0 ? params.offset : null,
-				extraSnippets: params.extraSnippets,
-				country: params.country,
-				language: params.language,
-				safesearch: params.safesearch,
-				freshness: params.freshness,
-				goggles: params.goggles
-			};
-		} else if (searchType === 'videos') {
-			const params = get(videosParamsStore);
-			invokeParams = {
-				...invokeParams,
-				count: params.count > 0 ? params.count : null,
-				offset: params.offset > 0 ? params.offset : null,
-				country: params.country,
-				language: params.language,
-				safesearch: params.safesearch,
-				freshness: params.freshness,
-				spellcheck: params.spellcheck
-			};
-		} else if (searchType === 'images') {
-			const params = get(imagesParamsStore);
-			invokeParams = {
-				...invokeParams,
-				count: params.count > 0 ? params.count : null,
-				country: params.country,
-				language: params.language,
-				safesearch: params.safesearch,
-				spellcheck: params.spellcheck
-			};
-		}
+		const commands: Record<string, string> = {
+			news: 'search_news_brave',
+			videos: 'search_videos_brave',
+			images: 'search_images_brave',
+			web: 'search_brave'
+		};
+
 		try {
-			loading = true;
-			onloadingChange?.(loading);
+			if (searchType === 'web') {
+				const params = get(webParamsStore);
+				console.log(`[web] Extra Snippets: ${params.extraSnippets}`);
+				invokeParams = {
+					...invokeParams,
+					count: params.count > 0 ? params.count : null,
+					offset: params.offset > 0 ? params.offset : null,
+					extraSnippets: params.extraSnippets,
+					country: params.country,
+					language: params.language,
+					safesearch: params.safesearch,
+					freshness: params.freshness,
+					goggles: params.goggles,
+					fetchMetadata: params.fetchMetadata
+				};
+				loading = true;
+				onloadingChange?.(loading);
 
-			// invoke(command_name, { argument_name: value })
-			// Calls the appropriate Rust function based on search type
-			const commands: Record<string, string> = {
-				news: 'search_news_brave',
-				videos: 'search_videos_brave',
-				images: 'search_images_brave',
-				web: 'search_brave'
-			};
-			const command = commands[searchType] ?? 'search_brave';
+				// invoke(command_name, { argument_name: value })
+				// Calls the appropriate Rust function based on search type
+				const command = commands[searchType] ?? 'search_brave';
 
-			const response = await invoke<string>(command, invokeParams);
-			const raw: BraveSearchResponse = JSON.parse(response);
+				const response = await invoke<string>(command, invokeParams);
+				//const raw: BraveSearchResponse = JSON.parse(response);
+				const raw: SearchMain = JSON.parse(response);
 
-			loading = false;
-			onloadingChange?.(loading);
-			onsearchResults?.(raw);
+				loading = false;
+				onloadingChange?.(loading);
+				onsearchWebResults?.(raw);
 
-			// Clear input and hide dropdown after successful search
-			searchQuery = '';
+				// Clear input and hide dropdown after successful search
+				searchQuery = '';
+			} else if (searchType === 'news') {
+				const params = get(newsParamsStore);
+				console.log(`[news] Extra Snippets: ${params.extraSnippets}`);
+				invokeParams = {
+					...invokeParams,
+					count: params.count > 0 ? params.count : null,
+					offset: params.offset > 0 ? params.offset : null,
+					extraSnippets: params.extraSnippets,
+					country: params.country,
+					language: params.language,
+					safesearch: params.safesearch,
+					freshness: params.freshness,
+					goggles: params.goggles
+				};
+				loading = true;
+				onloadingChange?.(loading);
+
+				// invoke(command_name, { argument_name: value })
+				// Calls the appropriate Rust function based on search type
+				const command = commands[searchType] ?? 'search_brave';
+
+				const response = await invoke<string>(command, invokeParams);
+				const raw = JSON.parse(response);
+				const results: NewsResult[] = raw.results ?? raw.news?.results ?? [];
+
+				loading = false;
+				onloadingChange?.(loading);
+				onsearchNewsResults?.(results);
+
+				// Clear input and hide dropdown after successful search
+				searchQuery = '';
+			} else if (searchType === 'videos') {
+				const params = get(videosParamsStore);
+				invokeParams = {
+					...invokeParams,
+					count: params.count > 0 ? params.count : null,
+					offset: params.offset > 0 ? params.offset : null,
+					country: params.country,
+					language: params.language,
+					safesearch: params.safesearch,
+					freshness: params.freshness,
+					spellcheck: params.spellcheck
+				};
+				loading = true;
+				onloadingChange?.(loading);
+
+				// invoke(command_name, { argument_name: value })
+				// Calls the appropriate Rust function based on search type
+				const command = commands[searchType] ?? 'search_brave';
+
+				const response = await invoke<string>(command, invokeParams);
+				const raw = JSON.parse(response);
+				const results: VideosResult[] = raw.results ?? raw.videos?.results ?? [];
+
+				loading = false;
+				onloadingChange?.(loading);
+				onsearchVidsResults?.(results);
+
+				// Clear input and hide dropdown after successful search
+				searchQuery = '';
+			} else if (searchType === 'images') {
+				const params = get(imagesParamsStore);
+				invokeParams = {
+					...invokeParams,
+					count: params.count > 0 ? params.count : null,
+					country: params.country,
+					language: params.language,
+					safesearch: params.safesearch,
+					spellcheck: params.spellcheck
+				};
+				loading = true;
+				onloadingChange?.(loading);
+
+				// invoke(command_name, { argument_name: value })
+				// Calls the appropriate Rust function based on search type
+				const command = commands[searchType] ?? 'search_brave';
+
+				const response = await invoke<string>(command, invokeParams);
+				const raw = JSON.parse(response);
+				const results: ImagesResult[] = raw.results ?? raw.images?.results ?? [];
+
+				loading = false;
+				onloadingChange?.(loading);
+				onsearchImagesResults?.(results);
+
+				// Clear input and hide dropdown after successful search
+				searchQuery = '';
+			}
 		} catch (error) {
 			console.error('Error in handleSearch:', error);
 			loading = false;
@@ -211,7 +275,7 @@
 	{/if}
 
 	{#if showDropdown}
-		<div id="prevSearchDropDn" class="absolute z-50 w-[80%] rounded border bg-white shadow">
+		<div id="prevSearchDropDn" class="absolute z-50 w-[80%] rounded border bg-white shadow text-black">
 			{#each $previousSearchesWritable as prev, i (i)}
 				<div
 					class="w-full border-3 border-amber-500 px-4 py-2 hover:bg-gray-100"

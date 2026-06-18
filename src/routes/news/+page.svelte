@@ -4,7 +4,8 @@
 	import SearchDomain from '$lib/components/SearchDomainRtSlide.svelte';
 	import NewsResultsPage from '$lib/components/NewsResultsPage.svelte';
 	import { newsResults } from '$lib/stores/searchResultsStore';
-	import type { BraveSearchResponse, NewsResult } from '$lib/types/braveInterfaces';
+	//import type {  } from '$lib/types/braveInterfaces';
+	import type { NewsResult } from '$lib/types/newsResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import { writeTextFile } from '@tauri-apps/plugin-fs';
@@ -12,6 +13,13 @@
 	import { get } from 'svelte/store';
 
 	const searchType = 'news' as const;
+
+	type NewsSearchResponse = {
+		results?: NewsResult[];
+		news?: {
+			results?: NewsResult[];
+		};
+	};
 
 	let leftOpen = $state(false);
 	let isLoading = $state(false);
@@ -27,13 +35,16 @@
 		rightOpen = !rightOpen;
 	}
 
-	// handleSearchResults(results: BraveSearchResponse | string): void
-	function handleSearchResults(results: BraveSearchResponse | string) {
+	function handleSearchResults(results: NewsResult[] | NewsSearchResponse | string) {
 		if (typeof results === 'string') return;
+
+		const resultList = Array.isArray(results)
+			? results
+			: (results.results ?? results.news?.results ?? []);
+
 		console.log('Raw news response:', results);
-		const theResults = parseSearchResponse(results);
-		console.log('Parsed news results:', theResults.news);
-		newsResults.set(theResults.news);
+		console.log('News Results are :', resultList.length);
+		newsResults.set(resultList);
 	}
 
 	// handleLoadingChange(loading: boolean): void
@@ -51,7 +62,6 @@
 	}
 
 	async function downloadResults() {
-
 		const query = get(searchQueryWritable);
 		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
 
@@ -79,6 +89,10 @@
 			await writeTextFile(filePath, content);
 		}
 	}
+
+	function placementVoid() {
+		return;
+	}
 </script>
 
 <div class="flex flex-col">
@@ -89,7 +103,10 @@
 	</button>
 	<SearchComponent
 		{searchType}
-		onsearchResults={handleSearchResults}
+		onsearchWebResults={placementVoid}
+		onsearchNewsResults={handleSearchResults}
+		onsearchVidsResults={placementVoid}
+		onsearchImagesResults={placementVoid}
 		onloadingChange={handleLoadingChange}
 	/>
 
@@ -116,7 +133,6 @@
 			</button>
 		</div>
 
-		
 		<!-- Main Content -->
 		<div class="flex-1 overflow-y-auto">
 			{#if isLoading}
@@ -125,11 +141,11 @@
 				</div>
 			{/if}
 
-			<NewsResultsPage 
+			<NewsResultsPage
 				results={$newsResults}
 				{selectedNewsResults}
 				onToggleSelection={toggleSelection}
-				 />
+			/>
 		</div>
 
 		<!-- Right Sidebar + Toggle -->
@@ -141,7 +157,7 @@
 			>
 				<div class="w-68 p-1">
 					<!-- Sidebar content here -->
-					<SearchDomain/>
+					<SearchDomain />
 				</div>
 			</div>
 

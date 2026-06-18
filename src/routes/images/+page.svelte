@@ -3,12 +3,14 @@
 	import SearchParams from '$lib/components/SearchParamsLtSlide.svelte';
 	import ImageResultsPage from '$lib/components/ImageResultsPage.svelte';
 	import { imageResults } from '$lib/stores/searchResultsStore';
-	import type { BraveSearchResponse, ImagesResult } from '$lib/types/braveInterfaces';
+	//import type {  } from '$lib/types/braveInterfaces';
+	import type { ImagesResult } from '$lib/types/imagesResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import { writeTextFile } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
+	import type { Image } from '@tauri-apps/api/image';
 
 	const searchType = 'images' as const;
 
@@ -23,12 +25,12 @@
 	}
 
 	// handleSearchResults(results: BraveSearchResponse | string): void
-	function handleSearchResults(results: BraveSearchResponse | string) {
+	function handleSearchResults(results: ImagesResult[] | string) {
 		if (typeof results === 'string') return;
 		//console.log('Raw images response:', results);
-		const theResults = parseSearchResponse(results);
+		//const theResults = parseSearchResponse(results);
 		//console.log('Parsed image results:', theResults.image);
-		imageResults.set(theResults.images);
+		imageResults.set(results);
 	}
 
 	function toggleSelection(image: ImagesResult) {
@@ -41,7 +43,6 @@
 	}
 
 	async function downloadResults() {
-
 		const query = get(searchQueryWritable);
 		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
 
@@ -74,17 +75,24 @@
 	function handleLoadingChange(loading: boolean): void {
 		isLoading = loading;
 	}
+
+	function placementVoid() {
+		return;
+	}
 </script>
 
 <div class="flex flex-col">
-<button
+	<button
 		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
 		>Download
 	</button>
 	<SearchComponent
 		{searchType}
-		onsearchResults={handleSearchResults}
+		onsearchWebResults={placementVoid}
+		onsearchNewsResults={placementVoid}
+		onsearchVidsResults={placementVoid}
+		onsearchImagesResults={handleSearchResults}
 		onloadingChange={handleLoadingChange}
 	/>
 

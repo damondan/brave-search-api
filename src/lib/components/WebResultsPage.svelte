@@ -1,6 +1,6 @@
 <!-- src/lib/components/WebResults.svelte -->
 <script lang="ts">
-	import type { WebResult } from '$lib/types/braveInterfaces';
+	import type { WebResult } from '$lib/types/searchWebResultsInterface';
 	import { open } from '@tauri-apps/plugin-shell';
 
 	let { results = [] }: { results: WebResult[] } = $props();
@@ -15,6 +15,7 @@
 {:else}
 	{#each results as web}
 		<div class="mb-6">
+		<h1 class="text-black text-2xl">Hello</h1>
 			<div class="font-semibold">{@html web.title}</div>
 			<div>{@html web.description}</div>
 			{#if web.extra_snippets && web.extra_snippets.length > 0}

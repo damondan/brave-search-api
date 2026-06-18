@@ -50,7 +50,7 @@
 <div class="mb-1">
 	<!-- Count (all types) -->
 	<div class="mb-4 flex items-center gap-2">
-		<label class="text-red-600">C</label>
+		<label class="text-white">C</label>
 		{#if searchType === 'web'}
 			<input
 				type="number"
@@ -62,6 +62,7 @@
 					webParamsStore.update((p) => ({ ...p, count: Math.min(20, Math.max(0, val)) }));
 				}}
 				class="h-10 w-16 rounded border border-gray-300 p-1 text-center text-lg text-black"
+				title="Count"
 			/>
 		{:else if searchType === 'news'}
 			<input
@@ -103,7 +104,7 @@
 
 		<!-- Offset (web, news, videos only) -->
 		{#if hasOffset}
-			<label class="text-red-600">O</label>
+			<label class="text-white">O</label>
 			{#if searchType === 'web'}
 				<input
 					type="number"
@@ -115,6 +116,7 @@
 						webParamsStore.update((p) => ({ ...p, offset: Math.min(9, Math.max(0, val)) }));
 					}}
 					class="h-10 w-16 rounded border border-gray-300 p-1 text-center text-lg text-black"
+					title="Offset"
 				/>
 			{:else if searchType === 'news'}
 				<input
@@ -152,7 +154,7 @@
 					checked={$webParamsStore.extraSnippets}
 					onchange={() => webParamsStore.update((p) => ({ ...p, extraSnippets: !p.extraSnippets }))}
 				>
-					<span class="text-red-600">Extra Snippets</span>
+					<span class="text-white">Extra Snippets</span>
 				</Checkbox>
 			{:else}
 				<Checkbox
@@ -160,7 +162,7 @@
 					onchange={() =>
 						newsParamsStore.update((p) => ({ ...p, extraSnippets: !p.extraSnippets }))}
 				>
-					<span class="text-red-600">Extra Snippets</span>
+					<span class="text-white">Extra Snippets</span>
 				</Checkbox>
 			{/if}
 		{/if}
@@ -169,7 +171,7 @@
 				checked={$webParamsStore.fetchMetadata}
 				onchange={() => webParamsStore.update((p) => ({ ...p, fetchMetadata: !p.fetchMetadata }))}
 			>
-				<span class="text-red-600">Fetch Meta Data</span>
+				<span class="text-white">Fetch Meta Data</span>
 			</Checkbox>
 		{/if}
 		{#if hasGoggles}
@@ -178,14 +180,14 @@
 					checked={$webParamsStore.goggles}
 					onchange={() => webParamsStore.update((p) => ({ ...p, goggles: !p.goggles }))}
 				>
-					<span class="text-red-600">Goggles</span>
+					<span class="text-white">Goggles</span>
 				</Checkbox>
 			{:else}
 				<Checkbox
 					checked={$newsParamsStore.goggles}
 					onchange={() => newsParamsStore.update((p) => ({ ...p, goggles: !p.goggles }))}
 				>
-					<span class="text-red-600">Goggles</span>
+					<span class="text-white">Goggles</span>
 				</Checkbox>
 			{/if}
 		{/if}
@@ -195,21 +197,21 @@
 					checked={$videosParamsStore.spellcheck}
 					onchange={() => videosParamsStore.update((p) => ({ ...p, spellcheck: !p.spellcheck }))}
 				>
-					<span class="text-red-600">Spellcheck</span>
+					<span class="text-white">Spellcheck</span>
 				</Checkbox>
 			{:else}
 				<Checkbox
 					checked={$imagesParamsStore.spellcheck}
 					onchange={() => imagesParamsStore.update((p) => ({ ...p, spellcheck: !p.spellcheck }))}
 				>
-					<span class="text-red-600">Spellcheck</span>
+					<span class="text-white">Spellcheck</span>
 				</Checkbox>
 			{/if}
 		{/if}
 	</div>
 
 	<!-- Safe Search (all types) -->
-	<label class="block font-semibold tracking-widest text-red-600">Safe Search</label>
+	<label class="block font-semibold tracking-widest text-white">Safe Search</label>
 	<div class="flex flex-col">
 		{#if searchType === 'web'}
 			<Radio
@@ -288,7 +290,7 @@
 
 	<!-- Freshness (web, news, videos only) -->
 	{#if hasFreshness}
-		<label class="block font-semibold tracking-widest text-red-600">Freshness</label>
+		<label class="block font-semibold tracking-widest text-white">Freshness</label>
 		<div class="flex flex-col">
 			{#if searchType === 'web'}
 				<Radio
@@ -369,7 +371,7 @@
 		</div>
 	{/if}
 	<!-- Country (all types) -->
-	<label class="block font-semibold tracking-widest text-red-600">Country</label>
+	<label class="block font-semibold tracking-widest text-white">Country</label>
 	<div class="flex flex-col">
 		<Button class="cursor-pointer">
 			{selectedLabel()}
@@ -412,7 +414,7 @@
 		</Dropdown>
 
 		<!-- Language (all types) -->
-		<label class="block font-semibold tracking-widest text-red-600">Language</label>
+		<label class="block font-semibold tracking-widest text-white">Language</label>
 		<div class="flex flex-col">
 			<Button>
 				{selectedLangLabel()}

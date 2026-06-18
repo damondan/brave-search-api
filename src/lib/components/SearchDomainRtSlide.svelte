@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { rightNews, leftNews } from '$lib/utils/domains';
+	import { rightNews, leftNews, basedNews, foreignNews } from '$lib/utils/domains';
 	import { Dropdown, Button, Radio, Checkbox, search } from 'flowbite-svelte';
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 
 	const leftNewsArray = Object.entries(leftNews);
 	const rightNewsArray = Object.entries(rightNews);
-	const basedNewsArray = Object.entries(leftNews);
-	const foreignNewsArray = Object.entries(rightNews);
+	const basedNewsArray = Object.entries(basedNews);
+	const foreignNewsArray = Object.entries(foreignNews);
 	const cultureNewsArray = Object.entries(leftNews);
 	const techNewsArray = Object.entries(rightNews);
 	const musicNewsArray = Object.entries(leftNews);
@@ -77,7 +77,7 @@
 	</label>
 	<Dropdown simple class="max-h-94 w-44 space-y-3 overflow-y-auto p-3 text-sm">
 	<div class="flex flex-col">
-	<!-- {#each basedNewsArray as [name, url]}
+	{#each basedNewsArray as [name, url]}
 		<button
 			type="button"
 			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
@@ -85,7 +85,7 @@
 		>
 			{name}
 		</button>
-	{/each} -->
+	{/each}
 	</div>
 	</Dropdown>
 	<label class="text-xl text-black underline">Foreign News
@@ -97,7 +97,7 @@
 	</label>
 	<Dropdown simple class="max-h-94 w-44 space-y-3 overflow-y-auto p-3 text-sm">
 	<div class="flex flex-col">
-	<!-- {#each foreignNewsArray as [name, url]}
+	{#each foreignNewsArray as [name, url]}
 		<button
 			type="button"
 			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
@@ -105,7 +105,7 @@
 		>
 			{name}
 		</button>
-	{/each} -->
+	{/each}
 	</div>
 	</Dropdown>
 

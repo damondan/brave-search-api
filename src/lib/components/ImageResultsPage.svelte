@@ -1,7 +1,7 @@
 <!-- src/lib/components/VideoResults.svelte -->
 <script lang="ts">
 	import { imageResults } from '$lib/stores/searchResultsStore';
-	import type { ImagesResult } from '$lib/types/braveInterfaces';
+	import type { ImagesResult } from '$lib/types/imagesResultsInterface';
 	import { open } from '@tauri-apps/plugin-shell';
 
 	let {
@@ -45,13 +45,13 @@
 					</div>
 				{/if}
 				<div class="flex-1">
-					<div class="font-semibold">{@html image.title}</div>
+					<div class="font-semibold text-black">{@html image.title}</div>
 					{#if image?.source}
 						<div class="text-xl text-gray-500">{image.source}</div>
 					{/if}
-					{#if image.properties?.format}
+					<!-- {#if image.properties?.format}
 						<div class="text-md text-red-400">{image.properties.format} format</div>
-					{/if}
+					{/if} -->
                     {#if image.properties?.width}
 						<div class="font-semibold text-md text-red-400">{image.properties.width} width</div>
 					{/if}
