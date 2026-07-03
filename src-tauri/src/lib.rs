@@ -22,45 +22,58 @@ async fn search_brave(
     goggles: Option<bool>,
     fetch_metadata: Option<bool>,
 ) -> Result<String, String> {
-    println!("Received query: {}", query);
-    println!("extra_snippets value: {:?}", extra_snippets);
+    println!("IN RUST SEARCH_BRAVE FUNCTION -> Received query: {}", query);
+
     let client = reqwest::Client::new();
     let key = std::env::var("BRAVE_API_KEY").expect("BRAVE_API_KEY not set");
 
+    // Add Brave search operator directly into q
+    let mut final_query = query;
+
+    if let Some(l) = language {
+        if !l.trim().is_empty() {
+            final_query = format!("{} lang:{}", final_query, l);
+        }
+    }
+
     // Build query params dynamically
-    let mut params: Vec<(&str, String)> = vec![("q", query)];
-    
+    let mut params: Vec<(&str, String)> = vec![("q", final_query)];
+
     if let Some(c) = count {
         if c > 0 && c <= 15 {
             params.push(("count", c.to_string()));
         }
     }
-     if let Some(o) = offset {
+
+    if let Some(o) = offset {
         if o > 0 && o <= 9 {
             params.push(("offset", o.to_string()));
         }
     }
+
     if extra_snippets == Some(true) {
         params.push(("extra_snippets", "true".to_string()));
     }
+
     if let Some(c) = country {
         params.push(("country", c));
     }
-    if let Some(l) = language {
-        params.push(("search_lang", l));
-    }
+
     if let Some(s) = safesearch {
         params.push(("safesearch", s));
     }
+
     if let Some(f) = freshness {
-        print!("freshness is {}", f);
+        println!("freshness is {}", f);
         params.push(("freshness", f));
     }
+
     if goggles == Some(true) {
         params.push(("goggles", "true".to_string()));
     }
+
     if fetch_metadata == Some(true) {
-        params.push(("result_filter", "fetch_metadata".to_string()));
+        params.push(("include_fetch_metadata", "true".to_string()));
     }
 
     println!("Query params: {:?}", params);
@@ -73,11 +86,9 @@ async fn search_brave(
         .send()
         .await
         .map_err(|e| e.to_string())?;
-    
+
     let body = response.text().await.map_err(|e| e.to_string())?;
-    
-    //println!("Response: {}", body);
-    
+
     Ok(body)
 }
 

@@ -3,7 +3,8 @@
 	import SearchParams from '$lib/components/SearchParamsLtSlide.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { writeTextFile } from '@tauri-apps/plugin-fs';
+	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
+	import { homeDir, join } from '@tauri-apps/api/path';
 	import { webResults } from '$lib/stores/searchResultsStore';
 	import type { SearchMain, WebResult } from '$lib/types/searchWebResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
@@ -26,6 +27,14 @@
 	function handleSearchResults(results: SearchMain | string) {
 		if (typeof results === 'string') return; // Handle error case
 		//const theResults = parseSearchResponse(results);
+		console.log('SearchMain raw:', results);
+
+	if (!results.web?.results) {
+		console.error('Missing web results:', results);
+		webResults.set([]);
+		return;
+	}
+
 		webResults.set(results.web.results);
 	}
 
@@ -53,44 +62,66 @@
 	}
 
 	async function downloadResults() {
-		const query = get(searchQueryWritable);
-		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
+	let query = get(searchQueryWritable);
 
-		if (selectedWebResults.length == 0) {
-			return;
-		}
+	if (selectedWebResults.length === 0) return;
 
-		const content = selectedWebResults
-			.map((web, i) => {
-				let text = `${i + 1}. ${web.title}\n`;
-				text += `   ${web.description}\n`;
-				text += `   URL: ${web.url}\n`;
-				if (web.extra_snippets && web.extra_snippets.length > 0) {
-					text += `   Snippets:\n`;
-					web.extra_snippets.forEach((snippet, j) => {
-						text += `     ${j + 1}. ${snippet}\n`;
-					});
-				}
-				text += `\n`;
-				return text;
-			})
-			.join('\n');
+	let folderName = '';
+	let cleanQuery = query;
 
-		// Open save dialog
-		const filePath = await save({
-			filters: [{ name: 'Text', extensions: ['txt'] }],
-			defaultPath: `${sanitizedQuery}-web-results.txt`
-		});
+	const folderMatch = query.match(/^\*\/([^ ]+)\s*(.*)$/);
 
-		if (filePath) {
-			await writeTextFile(filePath, content);
-		}
+	if (folderMatch) {
+		folderName = folderMatch[1];
+		cleanQuery = folderMatch[2] || 'search-results';
 	}
+
+	const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
+
+	const content = selectedWebResults
+		.map((web, i) => {
+			let text = `${i + 1}. ${web.title}\n`;
+			text += `   ${web.description}\n`;
+			text += `   URL: ${web.url}\n`;
+
+			if (web.extra_snippets && web.extra_snippets.length > 0) {
+				text += `   Snippets:\n`;
+				web.extra_snippets.forEach((snippet, j) => {
+					text += `     ${j + 1}. ${snippet}\n`;
+				});
+			}
+
+			text += `\n`;
+			return text;
+		})
+		.join('\n');
+
+	const home = await homeDir();
+
+	let baseDir = await join(home, 'Media', 'braveSearchApi', 'Web');
+
+	if (folderName) {
+		baseDir = await join(baseDir, folderName);
+	}
+
+	await mkdir(baseDir, { recursive: true });
+
+	const defaultPath = await join(baseDir, `${sanitizedQuery}-web.txt`);
+
+	const filePath = await save({
+		filters: [{ name: 'Text', extensions: ['txt'] }],
+		defaultPath
+	});
+
+	if (filePath) {
+		await writeTextFile(filePath, content);
+	}
+}
 </script>
 
 <div class="flex flex-col">
 	<button
-		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
+		class="download-button self-start text-lg text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
 		>Download
 	</button>
@@ -139,12 +170,12 @@
 					<div class="flex items-start gap-2">
 						<input
 							type="checkbox"
-							class="mt-2"
+							class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
 							checked={selectedWebResults.some((r) => r.url == web.url)}
 							onchange={() => toggleSelection(web)}
 						/>
 						<button
-							class="cursor-pointer text-2xl text-red-500 hover:text-red-700"
+							class="cursor-pointer text-4xl text-red-500 hover:text-red-700"
 							onclick={() => webResults.update((results) => results.filter((_, i) => i !== index))}
 						>
 							✕

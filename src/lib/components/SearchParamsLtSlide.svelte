@@ -154,7 +154,10 @@
 					checked={$webParamsStore.extraSnippets}
 					onchange={() => webParamsStore.update((p) => ({ ...p, extraSnippets: !p.extraSnippets }))}
 				>
-					<span class="text-white">Extra Snippets</span>
+					<span
+						title="returns up to 5 additional excerpts from each search result"
+						class="text-white">Extra Snippets</span
+					>
 				</Checkbox>
 			{:else}
 				<Checkbox
@@ -171,7 +174,10 @@
 				checked={$webParamsStore.fetchMetadata}
 				onchange={() => webParamsStore.update((p) => ({ ...p, fetchMetadata: !p.fetchMetadata }))}
 			>
-				<span class="text-white">Fetch Meta Data</span>
+				<span
+					title="Useful for checking freshness/reliability signals on search results."
+					class="text-white">Fetch Meta Data</span
+				>
 			</Checkbox>
 		{/if}
 		{#if hasGoggles}
@@ -425,28 +431,33 @@
 					<li>
 						{#if searchType === 'web'}
 							<Radio
-								name="{searchType}-language"
+								name={searchType + '-language'}
 								checked={$webParamsStore.language === language.key}
-								onchange={() => webParamsStore.update((p) => ({ ...p, language: language.key }))}
-								value={language.key}>{language.label}</Radio
+								value={language.key}
+								onchange={() => {
+									console.log('selected language:', language.key);
+									webParamsStore.update((p) => ({ ...p, language: language.key }));
+								}}
 							>
+								{language.label}
+							</Radio>
 						{:else if searchType === 'news'}
 							<Radio
-								name="{searchType}-language"
+								name={searchType + '-language'}
 								checked={$newsParamsStore.language === language.key}
 								onchange={() => newsParamsStore.update((p) => ({ ...p, language: language.key }))}
 								value={language.key}>{language.label}</Radio
 							>
 						{:else if searchType === 'videos'}
 							<Radio
-								name="{searchType}-language"
+								name={searchType + '-language'}
 								checked={$videosParamsStore.language === language.key}
 								onchange={() => videosParamsStore.update((p) => ({ ...p, language: language.key }))}
 								value={language.key}>{language.label}</Radio
 							>
 						{:else}
 							<Radio
-								name="{searchType}-language"
+								name={searchType + '-language'}
 								checked={$imagesParamsStore.language === language.key}
 								onchange={() => imagesParamsStore.update((p) => ({ ...p, language: language.key }))}
 								value={language.key}>{language.label}</Radio
@@ -473,7 +484,7 @@
 	<!-- Search Operators Popup -->
 	{#if showOperators}
 		<div
-			class="fixed inset-0 z-50 flex items-start pt-10 justify-center bg-black/50"
+			class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-10"
 			onclick={() => (showOperators = false)}
 		>
 			<div

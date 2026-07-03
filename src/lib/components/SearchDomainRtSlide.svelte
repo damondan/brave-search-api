@@ -39,7 +39,7 @@
 			{#each leftNewsArray as [name, url]}
 				<button
 					type="button"
-					class="cursor-pointer text-xl text-blue-700 underline hover:text-blue-900"
+					class="cursor-pointer text-xl text-white/50 underline hover:text-white"
 					on:click={() => copyToClipboard(url)}
 				>
 					{name}
@@ -59,7 +59,7 @@
 	{#each rightNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -80,7 +80,7 @@
 	{#each basedNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -100,7 +100,7 @@
 	{#each foreignNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -121,7 +121,7 @@
 	<!-- {#each cultureNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -141,7 +141,7 @@
 	<!-- {#each techNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -162,7 +162,7 @@
 	<!-- {#each musicNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -183,7 +183,7 @@
 	<!-- {#each landNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -204,7 +204,7 @@
 	<!-- {#each offGridNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -225,7 +225,7 @@
 	<!-- {#each farmNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -246,7 +246,7 @@
 	<!-- {#each medicineNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}
@@ -267,7 +267,7 @@
 	<!-- {#each psychNewsArray as [name, url]}
 		<button
 			type="button"
-			class="cursor-pointer text-blue-700 underline hover:text-blue-900"
+			class="cursor-pointer text-white/50 underline hover:text-white text-xl"
 			on:click={() => copyToClipboard(url)}
 		>
 			{name}

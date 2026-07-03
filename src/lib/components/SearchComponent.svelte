@@ -46,6 +46,7 @@
 		if (!searchQuery.trim()) {
 			console.error('Search Query is Missing');
 			onsearchVidsResults?.('noSearchTermAndNoPdfs');
+			
 			return;
 		}
 
@@ -60,11 +61,11 @@
 			images: 'search_images_brave',
 			web: 'search_brave'
 		};
-
+console.log(`In handleSearchDispatch and searchType is ${searchType}`);
 		try {
 			if (searchType === 'web') {
 				const params = get(webParamsStore);
-				console.log(`[web] Extra Snippets: ${params.extraSnippets}`);
+				console.log(`Params language is ${params.language}`);
 				invokeParams = {
 					...invokeParams,
 					count: params.count > 0 ? params.count : null,

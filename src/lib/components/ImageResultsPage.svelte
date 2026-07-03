@@ -27,12 +27,12 @@
 			<div class="flex items-start gap-2">
 			<input
 					type="checkbox"
-					class="mt-2"
+					class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
 					checked={selectedImageResults.some((r) => r.url == image.url)}
 					onchange={() => onToggleSelection(image)}
 				/>
 				<button
-					class="cursor-pointer text-2xl text-red-500 hover:text-red-700"
+					class="cursor-pointer text-4xl text-red-500 hover:text-red-700"
 					onclick={() => imageResults.update((results) => results.filter((_, i) => i != index))}
 				>
 					✕

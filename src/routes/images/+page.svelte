@@ -7,7 +7,10 @@
 	import type { ImagesResult } from '$lib/types/imagesResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { writeTextFile } from '@tauri-apps/plugin-fs';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { homeDir, join } from '@tauri-apps/api/path';
+
+	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
 	import type { Image } from '@tauri-apps/api/image';
@@ -43,27 +46,47 @@
 	}
 
 	async function downloadResults() {
-		const query = get(searchQueryWritable);
-		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
+		let query = get(searchQueryWritable);
 
-		if (selectedImageResults.length == 0) {
-			return;
+		if (selectedImageResults.length === 0) return;
+
+		let folderName = '';
+		let cleanQuery = query;
+
+		const folderMatch = query.match(/^\*\/([^ ]+)\s*(.*)$/);
+
+		if (folderMatch) {
+			folderName = folderMatch[1];
+			cleanQuery = folderMatch[2] || 'search-results';
 		}
 
+		const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
+
 		const content = selectedImageResults
-			.map((images, i) => {
-				let text = `${i + 1}. ${images.title}\n`;
-				text += `   ${images.source}\n`;
-				text += `   URL: ${images.url}\n`;
+			.map((image, i) => {
+				let text = `${i + 1}. ${image.title}\n`;
+				text += `   URL: ${image.url}\n`;
+
 				text += `\n`;
 				return text;
 			})
 			.join('\n');
 
-		// Open save dialog
+		const home = await homeDir();
+
+		let baseDir = await join(home, 'Media', 'braveSearchApi', 'Images');
+
+		if (folderName) {
+			baseDir = await join(baseDir, folderName);
+		}
+
+		await mkdir(baseDir, { recursive: true });
+
+		const defaultPath = await join(baseDir, `${sanitizedQuery}-images.txt`);
+
 		const filePath = await save({
 			filters: [{ name: 'Text', extensions: ['txt'] }],
-			defaultPath: `${sanitizedQuery}-images-results.txt`
+			defaultPath
 		});
 
 		if (filePath) {
@@ -83,7 +106,7 @@
 
 <div class="flex flex-col">
 	<button
-		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
+		class="download-button self-start text-lg text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
 		>Download
 	</button>

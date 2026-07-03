@@ -8,7 +8,9 @@
 	import type { NewsResult } from '$lib/types/newsResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { writeTextFile } from '@tauri-apps/plugin-fs';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { homeDir, join } from '@tauri-apps/api/path';
+	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
 
@@ -62,42 +64,70 @@
 	}
 
 	async function downloadResults() {
-		const query = get(searchQueryWritable);
-		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
+	let query = get(searchQueryWritable);
 
-		if (selectedNewsResults.length == 0) {
-			return;
-		}
+	if (selectedNewsResults.length === 0) return;
 
-		const content = selectedNewsResults
-			.map((news, i) => {
-				let text = `${i + 1}. ${news.title}\n`;
-				text += `   ${news.description}\n`;
-				text += `   URL: ${news.url}\n`;
-				text += `\n`;
-				return text;
-			})
-			.join('\n');
+	let folderName = '';
+	let cleanQuery = query;
 
-		// Open save dialog
-		const filePath = await save({
-			filters: [{ name: 'Text', extensions: ['txt'] }],
-			defaultPath: `${sanitizedQuery}-news-results.txt`
-		});
+	const folderMatch = query.match(/^\*\/([^ ]+)\s*(.*)$/);
 
-		if (filePath) {
-			await writeTextFile(filePath, content);
-		}
+	if (folderMatch) {
+		folderName = folderMatch[1];
+		cleanQuery = folderMatch[2] || 'search-results';
 	}
 
-	function placementVoid() {
+	const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
+
+	const content = selectedNewsResults
+		.map((news, i) => {
+			let text = `${i + 1}. ${news.title}\n`;
+			text += `   ${news.description}\n`;
+			text += `   URL: ${news.url}\n`;
+
+			if (news.extra_snippets && news.extra_snippets.length > 0) {
+				text += `   Snippets:\n`;
+				news.extra_snippets.forEach((snippet:string, j:number) => {
+					text += `     ${j + 1}. ${snippet}\n`;
+				});
+			}
+
+			text += `\n`;
+			return text;
+		})
+		.join('\n');
+
+	const home = await homeDir();
+
+	let baseDir = await join(home, 'Media', 'braveSearchApi', 'News');
+
+	if (folderName) {
+		baseDir = await join(baseDir, folderName);
+	}
+
+	await mkdir(baseDir, { recursive: true });
+
+	const defaultPath = await join(baseDir, `${sanitizedQuery}-news.txt`);
+
+	const filePath = await save({
+		filters: [{ name: 'Text', extensions: ['txt'] }],
+		defaultPath
+	});
+
+	if (filePath) {
+		await writeTextFile(filePath, content);
+	}
+}
+
+function placementVoid(){
 		return;
 	}
 </script>
 
 <div class="flex flex-col">
 	<button
-		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
+		class="download-button self-start text-lg text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
 		>Download
 	</button>

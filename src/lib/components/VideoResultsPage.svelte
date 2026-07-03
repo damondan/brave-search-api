@@ -27,10 +27,16 @@
 			<div class="flex items-start gap-2">
 			<input
 					type="checkbox"
-					class="mt-2"
+					class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
 					checked={selectedVideosResults.some((r) => r.url == video.url)}
 					onchange={() => onToggleSelection(video)}
 				/>
+				<button
+					class="cursor-pointer text-4xl text-red-500 hover:text-red-700"
+					onclick={() => videoResults.update((results) => results.filter((_, i) => i != index))}
+				>
+					✕
+				</button>
 				{#if video.thumbnail?.src}
 					<div class="relative">
 						<img src={video.thumbnail.src} alt="" class="h-48 w-80 rounded object-cover" />
@@ -42,7 +48,7 @@
 					</div>
 				{/if}
 				<div class="flex-1">
-					<div class="font-semibold text-black">{@html video.title}</div>
+					<div class="font-semibold text-black text-3xl">{@html video.title}</div>
 					{#if video.video?.creator}
 						<div class="text-xl text-gray-500">{video.video.creator}</div>
 					{/if}
@@ -52,7 +58,7 @@
 					{#if video.age}
 						<div class="text-lg text-gray-400">{video.age}</div>
 					{/if}
-					<div class="mt-1 text-lg text-black">{@html video.description}</div>
+					<div class="mt-1 text-lg text-black text-2xl">{@html video.description}</div>
 					<a
 						href={video.url}
 						class="cursor-pointer text-sm text-blue-500 underline"
@@ -64,12 +70,7 @@
 						Watch Video
 					</a>
 				</div>
-				<button
-					class="cursor-pointer text-2xl text-red-500 hover:text-red-700"
-					onclick={() => videoResults.update((results) => results.filter((_, i) => i != index))}
-				>
-					✕
-				</button>
+				
 			</div>
 		</div>
 	{/each}

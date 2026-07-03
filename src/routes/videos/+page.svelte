@@ -4,11 +4,13 @@
 	import SearchDomain from '$lib/components/SearchDomainRtSlide.svelte';
 	import VideoResultsPage from '$lib/components/VideoResultsPage.svelte';
 	import { videoResults } from '$lib/stores/searchResultsStore';
-	import type {  } from '$lib/types/braveInterfaces';
+	import type {} from '$lib/types/braveInterfaces';
 	import type { VideosResult } from '$lib/types/videoResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { writeTextFile } from '@tauri-apps/plugin-fs';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { homeDir, join } from '@tauri-apps/api/path';
+	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
 	import type { Video } from 'flowbite-svelte';
@@ -47,28 +49,48 @@
 	}
 
 	async function downloadResults() {
+		let query = get(searchQueryWritable);
 
-		const query = get(searchQueryWritable);
-		const sanitizedQuery = query.replace(/\s+/g, '-').toLowerCase();
+		if (selectedVideosResults.length === 0) return;
 
-		if (selectedVideosResults.length == 0) {
-			return;
+		let folderName = '';
+		let cleanQuery = query;
+
+		const folderMatch = query.match(/^\*\/([^ ]+)\s*(.*)$/);
+
+		if (folderMatch) {
+			folderName = folderMatch[1];
+			cleanQuery = folderMatch[2] || 'search-results';
 		}
+
+		const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
 
 		const content = selectedVideosResults
 			.map((vid, i) => {
 				let text = `${i + 1}. ${vid.title}\n`;
 				text += `   ${vid.description}\n`;
 				text += `   URL: ${vid.url}\n`;
+
 				text += `\n`;
 				return text;
 			})
 			.join('\n');
 
-		// Open save dialog
+		const home = await homeDir();
+
+		let baseDir = await join(home, 'Media', 'braveSearchApi', 'Videos');
+
+		if (folderName) {
+			baseDir = await join(baseDir, folderName);
+		}
+
+		await mkdir(baseDir, { recursive: true });
+
+		const defaultPath = await join(baseDir, `${sanitizedQuery}-vid.txt`);
+
 		const filePath = await save({
 			filters: [{ name: 'Text', extensions: ['txt'] }],
-			defaultPath: `${sanitizedQuery}-vid-results.txt`
+			defaultPath
 		});
 
 		if (filePath) {
@@ -81,17 +103,16 @@
 		isLoading = loading;
 	}
 
-		function placementVoid(){
+	function placementVoid() {
 		return;
 	}
-
 </script>
 
 <div class="flex flex-col">
 	<button
-		class="download-button self-start text-sm text-purple-300 hover:text-purple-600"
+		class="download-button self-start text-lg text-purple-300 hover:text-purple-600"
 		onclick={downloadResults}
-		>Go
+		>Download
 	</button>
 	<SearchComponent
 		{searchType}
@@ -136,11 +157,12 @@
 			<VideoResultsPage
 				results={$videoResults}
 				{selectedVideosResults}
-				onToggleSelection={toggleSelection} />
+				onToggleSelection={toggleSelection}
+			/>
 		</div>
 
 		<!-- Right Sidebar -->
-			<!-- Right Sidebar + Toggle -->
+		<!-- Right Sidebar + Toggle -->
 		<div class="ml-auto flex h-screen">
 			<!-- Collapsible content -->
 			<div
@@ -149,7 +171,7 @@
 			>
 				<div class="w-68 p-1">
 					<!-- Sidebar content here -->
-					<SearchDomain/>
+					<SearchDomain />
 				</div>
 			</div>
 
