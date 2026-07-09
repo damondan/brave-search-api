@@ -3,14 +3,13 @@
 	import type { NewsResult } from '$lib/types/newsResultsInterface';
 	import { open } from '@tauri-apps/plugin-shell';
 	import { newsResults } from '$lib/stores/searchResultsStore';
+	import { newsSelectionState } from '$lib/stores/state.svelte';
 
 	let {
 		results,
-		selectedNewsResults,
 		onToggleSelection
 	}: {
 		results: NewsResult[];
-		selectedNewsResults: NewsResult[];
 		onToggleSelection: (news: NewsResult) => void;
 	} = $props();
 
@@ -28,7 +27,7 @@
 				<input
 					type="checkbox"
 					class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
-					checked={selectedNewsResults.some((r) => r.url == news.url)}
+					checked={newsSelectionState.selectedNewsResults.some((r) => r.url == news.url)}
 					onchange={() => onToggleSelection(news)}
 				/>
 				<button

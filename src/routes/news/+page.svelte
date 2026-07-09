@@ -13,6 +13,7 @@
 	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
+	import { newsSelectionState } from '$lib/stores/state.svelte';
 
 	const searchType = 'news' as const;
 
@@ -26,8 +27,6 @@
 	let leftOpen = $state(false);
 	let isLoading = $state(false);
 	let rightOpen = $state(false);
-
-	let selectedNewsResults: NewsResult[] = $state([]);
 
 	function leftSidebar() {
 		leftOpen = !leftOpen;
@@ -55,18 +54,18 @@
 	}
 
 	function toggleSelection(news: NewsResult) {
-		const exists = selectedNewsResults.find((r) => r.url == news.url);
+		const exists = newsSelectionState.selectedNewsResults.find((r) => r.url == news.url);
 		if (exists) {
-			selectedNewsResults = selectedNewsResults.filter((r) => r.url != news.url);
+			newsSelectionState.selectedNewsResults = newsSelectionState.selectedNewsResults.filter((r) => r.url != news.url);
 		} else {
-			selectedNewsResults = [...selectedNewsResults, news];
+			newsSelectionState.selectedNewsResults = [...newsSelectionState.selectedNewsResults, news];
 		}
 	}
 
 	async function downloadResults() {
 	let query = get(searchQueryWritable);
 
-	if (selectedNewsResults.length === 0) return;
+	if (newsSelectionState.selectedNewsResults.length === 0) return;
 
 	let folderName = '';
 	let cleanQuery = query;
@@ -80,7 +79,7 @@
 
 	const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
 
-	const content = selectedNewsResults
+	const content = newsSelectionState.selectedNewsResults
 		.map((news, i) => {
 			let text = `${i + 1}. ${news.title}\n`;
 			text += `   ${news.description}\n`;
@@ -118,6 +117,7 @@
 	if (filePath) {
 		await writeTextFile(filePath, content);
 	}
+	newsSelectionState.selectedNewsResults = [];
 }
 
 function placementVoid(){
@@ -173,7 +173,6 @@ function placementVoid(){
 
 			<NewsResultsPage
 				results={$newsResults}
-				{selectedNewsResults}
 				onToggleSelection={toggleSelection}
 			/>
 		</div>

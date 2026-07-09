@@ -9,6 +9,7 @@
 	import type { SearchMain, WebResult } from '$lib/types/searchWebResultsInterface';
 	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
+	import { webSelectionState } from '$lib/stores/state.svelte';
 	import { get } from 'svelte/store';
 
 	const searchType = 'web' as const;
@@ -17,7 +18,7 @@
 	let isLoading = $state(false);
 	let rightOpen = $state(false);
 
-	let selectedWebResults: WebResult[] = $state([]);
+	//let selectedWebResults: WebResult[] = $state([]);
 
 	function leftSidebar() {
 		leftOpen = !leftOpen;
@@ -34,7 +35,7 @@
 		webResults.set([]);
 		return;
 	}
-
+//2026 Iran war - Wikipedia
 		webResults.set(results.web.results);
 	}
 
@@ -49,11 +50,11 @@
 	}
 
 	function toggleSelection(web: WebResult) {
-		const exists = selectedWebResults.find((r) => r.url == web.url);
+		const exists = webSelectionState.selectedWebResults.find((r) => r.url == web.url);
 		if (exists) {
-			selectedWebResults = selectedWebResults.filter((r) => r.url != web.url);
+			webSelectionState.selectedWebResults = webSelectionState.selectedWebResults.filter((r) => r.url != web.url);
 		} else {
-			selectedWebResults = [...selectedWebResults, web];
+			webSelectionState.selectedWebResults = [...webSelectionState.selectedWebResults, web];
 		}
 	}
 
@@ -64,7 +65,7 @@
 	async function downloadResults() {
 	let query = get(searchQueryWritable);
 
-	if (selectedWebResults.length === 0) return;
+	if (webSelectionState.selectedWebResults.length === 0) return;
 
 	let folderName = '';
 	let cleanQuery = query;
@@ -78,7 +79,7 @@
 
 	const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
 
-	const content = selectedWebResults
+	const content = webSelectionState.selectedWebResults
 		.map((web, i) => {
 			let text = `${i + 1}. ${web.title}\n`;
 			text += `   ${web.description}\n`;
@@ -116,6 +117,7 @@
 	if (filePath) {
 		await writeTextFile(filePath, content);
 	}
+	webSelectionState.selectedWebResults = [];
 }
 </script>
 
@@ -171,7 +173,7 @@
 						<input
 							type="checkbox"
 							class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
-							checked={selectedWebResults.some((r) => r.url == web.url)}
+							checked={webSelectionState.selectedWebResults.some((r) => r.url == web.url)}
 							onchange={() => toggleSelection(web)}
 						/>
 						<button
