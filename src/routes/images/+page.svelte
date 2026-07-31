@@ -1,27 +1,22 @@
-<script lang="ts">
+ <script lang="ts">
 	import SearchComponent from '$lib/components/SearchComponent.svelte';
 	import SearchParams from '$lib/components/SearchParamsLtSlide.svelte';
 	import ImageResultsPage from '$lib/components/ImageResultsPage.svelte';
 	import { imageResults } from '$lib/stores/searchResultsStore';
-	//import type {  } from '$lib/types/braveInterfaces';
 	import type { ImagesResult } from '$lib/types/imagesResultsInterface';
-	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { open } from '@tauri-apps/plugin-shell';
 	import { homeDir, join } from '@tauri-apps/api/path';
 
 	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
-	import type { Image } from '@tauri-apps/api/image';
+	import { imagesSelectionState } from '$lib/stores/state.svelte';
 
 	const searchType = 'images' as const;
 
 	let leftOpen = $state(false);
 	let isLoading = $state(false);
 	let rightOpen = $state(false);
-
-	let selectedImageResults: ImagesResult[] = $state([]);
 
 	function leftSidebar() {
 		leftOpen = !leftOpen;
@@ -37,18 +32,18 @@
 	}
 
 	function toggleSelection(image: ImagesResult) {
-		const exists = selectedImageResults.find((r) => r.url == image.url);
+		const exists = imagesSelectionState.selectedImagesResults.find((r) => r.url == image.url);
 		if (exists) {
-			selectedImageResults = selectedImageResults.filter((r) => r.url != image.url);
+			imagesSelectionState.selectedImagesResults = imagesSelectionState.selectedImagesResults.filter((r) => r.url != image.url);
 		} else {
-			selectedImageResults = [...selectedImageResults, image];
+			imagesSelectionState.selectedImagesResults = [...imagesSelectionState.selectedImagesResults, image];
 		}
 	}
 
 	async function downloadResults() {
 		let query = get(searchQueryWritable);
 
-		if (selectedImageResults.length === 0) return;
+		if (imagesSelectionState.selectedImagesResults.length === 0) return;
 
 		let folderName = '';
 		let cleanQuery = query;
@@ -62,7 +57,7 @@
 
 		const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
 
-		const content = selectedImageResults
+		const content = imagesSelectionState.selectedImagesResults
 			.map((image, i) => {
 				let text = `${i + 1}. ${image.title}\n`;
 				text += `   URL: ${image.url}\n`;
@@ -92,6 +87,7 @@
 		if (filePath) {
 			await writeTextFile(filePath, content);
 		}
+		imagesSelectionState.selectedImagesResults = [];
 	}
 
 	// handleLoadingChange(loading: boolean): void
@@ -152,7 +148,6 @@
 
 			<ImageResultsPage
 				results={$imageResults}
-				{selectedImageResults}
 				onToggleSelection={toggleSelection}
 			/>
 		</div>

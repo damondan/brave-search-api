@@ -3,14 +3,13 @@
 	import { imageResults } from '$lib/stores/searchResultsStore';
 	import type { ImagesResult } from '$lib/types/imagesResultsInterface';
 	import { open } from '@tauri-apps/plugin-shell';
+	import { imagesSelectionState } from '$lib/stores/state.svelte';
 
 	let {
 		results,
-		selectedImageResults,
 		onToggleSelection
 	}: {
 		results: ImagesResult[];
-		selectedImageResults: ImagesResult[];
 		onToggleSelection: (images: ImagesResult) => void;
 	} = $props();
 
@@ -28,7 +27,7 @@
 			<input
 					type="checkbox"
 					class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
-					checked={selectedImageResults.some((r) => r.url == image.url)}
+					checked={imagesSelectionState.selectedImagesResults.some((r) => r.url == image.url)}
 					onchange={() => onToggleSelection(image)}
 				/>
 				<button

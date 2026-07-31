@@ -6,22 +6,18 @@
 	import { videoResults } from '$lib/stores/searchResultsStore';
 	import type {} from '$lib/types/braveInterfaces';
 	import type { VideosResult } from '$lib/types/videoResultsInterface';
-	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { open } from '@tauri-apps/plugin-shell';
 	import { homeDir, join } from '@tauri-apps/api/path';
 	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';
 	import { get } from 'svelte/store';
-	import type { Video } from 'flowbite-svelte';
+	import { videosSelectionState } from '$lib/stores/state.svelte';
 
 	const searchType = 'videos' as const;
 
 	let leftOpen = $state(false);
 	let isLoading = $state(false);
 	let rightOpen = $state(false);
-
-	let selectedVideosResults: VideosResult[] = $state([]);
 
 	function leftSidebar() {
 		leftOpen = !leftOpen;
@@ -40,18 +36,18 @@
 	}
 
 	function toggleSelection(vid: VideosResult) {
-		const exists = selectedVideosResults.find((r) => r.url == vid.url);
+		const exists = videosSelectionState.selectedVideosResults.find((r) => r.url == vid.url);
 		if (exists) {
-			selectedVideosResults = selectedVideosResults.filter((r) => r.url != vid.url);
+			videosSelectionState.selectedVideosResults = videosSelectionState.selectedVideosResults.filter((r) => r.url != vid.url);
 		} else {
-			selectedVideosResults = [...selectedVideosResults, vid];
+			videosSelectionState.selectedVideosResults = [...videosSelectionState.selectedVideosResults, vid];
 		}
 	}
 
 	async function downloadResults() {
 		let query = get(searchQueryWritable);
 
-		if (selectedVideosResults.length === 0) return;
+		if (videosSelectionState.selectedVideosResults.length === 0) return;
 
 		let folderName = '';
 		let cleanQuery = query;
@@ -65,7 +61,7 @@
 
 		const sanitizedQuery = cleanQuery.replace(/\s+/g, '-').toLowerCase();
 
-		const content = selectedVideosResults
+		const content = videosSelectionState.selectedVideosResults
 			.map((vid, i) => {
 				let text = `${i + 1}. ${vid.title}\n`;
 				text += `   ${vid.description}\n`;
@@ -96,6 +92,8 @@
 		if (filePath) {
 			await writeTextFile(filePath, content);
 		}
+
+		videosSelectionState.selectedVideosResults = [];
 	}
 
 	// handleLoadingChange(loading: boolean): void
@@ -156,7 +154,6 @@
 
 			<VideoResultsPage
 				results={$videoResults}
-				{selectedVideosResults}
 				onToggleSelection={toggleSelection}
 			/>
 		</div>

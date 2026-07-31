@@ -4,11 +4,8 @@
 	import SearchDomain from '$lib/components/SearchDomainRtSlide.svelte';
 	import NewsResultsPage from '$lib/components/NewsResultsPage.svelte';
 	import { newsResults } from '$lib/stores/searchResultsStore';
-	//import type {  } from '$lib/types/braveInterfaces';
 	import type { NewsResult } from '$lib/types/newsResultsInterface';
-	import { parseSearchResponse } from '$lib/utils/parseSearch';
 	import { save } from '@tauri-apps/plugin-dialog';
-	import { open } from '@tauri-apps/plugin-shell';
 	import { homeDir, join } from '@tauri-apps/api/path';
 	import { writeTextFile, mkdir } from '@tauri-apps/plugin-fs';
 	import { searchQueryWritable } from '$lib/stores/searchTabParamsStore';

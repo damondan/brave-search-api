@@ -2,15 +2,14 @@
 <script lang="ts">
 	import { videoResults } from '$lib/stores/searchResultsStore';
 	import type { VideosResult } from '$lib/types/videoResultsInterface';
+	import { videosSelectionState } from '$lib/stores/state.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
 
 	let {
 		results,
-		selectedVideosResults,
 		onToggleSelection
 	}: {
 		results: VideosResult[];
-		selectedVideosResults: VideosResult[];
 		onToggleSelection: (videos: VideosResult) => void;
 	} = $props();
 
@@ -28,7 +27,7 @@
 			<input
 					type="checkbox"
 					class="mt-2 text-4xl h-6 w-6 ascent-black text-black"
-					checked={selectedVideosResults.some((r) => r.url == video.url)}
+					checked={videosSelectionState.selectedVideosResults.some((r) => r.url == video.url)}
 					onchange={() => onToggleSelection(video)}
 				/>
 				<button
