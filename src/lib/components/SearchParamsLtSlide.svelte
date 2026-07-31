@@ -491,7 +491,7 @@
 				class="max-h-[80vh] w-[900px] overflow-y-auto rounded-lg bg-white p-6"
 				onclick={(e) => e.stopPropagation()}
 			>
-				<h2 class="mb-4 text-xl font-bold text-black">Search Operators</h2>
+				<h2 class="mb-4 text-xl font-bold text-black">Search Operators <span class="text-black/30 text-sm">( To create folder for Download start Search with ex. */history Civil War)</span></h2>
 				<div class="space-y-1 text-base text-black">
 					<div class="grid grid-cols-3 gap-4 border-b-2 border-gray-300 pb-2 font-bold">
 						<span>Operator</span>
