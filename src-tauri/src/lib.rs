@@ -25,8 +25,8 @@ async fn search_brave(
     println!("IN RUST SEARCH_BRAVE FUNCTION -> Received query: {}", query);
 
     let client = reqwest::Client::new();
-    let key = std::env::var("BRAVE_API_KEY").expect("BRAVE_API_KEY not set");
-
+    let key = env!("BRAVE_API_KEY");
+    
     // Add Brave search operator directly into q
     let mut final_query = query;
 
