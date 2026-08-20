@@ -4,6 +4,9 @@ use std::fs;
 use tauri::{State, Manager, AppHandle};
 use std::path::PathBuf;
 use std::path::Path;
+use std::process::{Command, Output};
+use tempfile::tempdir;
+use url::Url;
 
 // src-tauri/src/lib.rs
 // search_brave(query: String, extra_snippets: Option<bool>, country: Option<String>, 
@@ -307,6 +310,170 @@ async fn save_brave_data(data: String, app_handle: tauri::AppHandle) -> Result<(
         .map_err(|e| format!("Failed to write brave data: {}", e))
 }
 
+#[tauri::command]
+async fn transcribe_video_url(video_url: String) -> Result<String, String> {
+
+eprintln!(
+    "APP PATH = {}",
+    std::env::var("PATH").unwrap_or_default()
+);
+
+eprintln!(
+    "HOME = {}",
+    std::env::var("HOME").unwrap_or_default()
+);
+
+    validate_video_url(&video_url)?;
+
+    tauri::async_runtime::spawn_blocking(move || {
+        transcribe_video_url_blocking(&video_url)
+    })
+    .await
+    .map_err(|error| format!("Transcription task failed: {error}"))?
+}
+
+fn transcribe_video_url_blocking(video_url: &str) -> Result<String, String> {
+    let temp_directory = tempdir()
+        .map_err(|error| format!("Could not create temporary directory: {error}"))?;
+
+    let working_directory = temp_directory.path();
+
+    let output_template = working_directory.join("audio.%(ext)s");
+
+    download_audio(video_url, &output_template)?;
+
+    let audio_path = working_directory.join("audio.wav");
+
+    if !audio_path.exists() {
+        return Err(format!(
+            "Expected audio file was not created: {}",
+            audio_path.display()
+        ));
+    }
+
+    transcribe_audio(&audio_path, working_directory)?;
+
+    let transcript_path = working_directory.join("audio.txt");
+
+    if !transcript_path.exists() {
+        return Err(format!(
+            "Expected transcript was not created: {}",
+            transcript_path.display()
+        ));
+    }
+
+    fs::read_to_string(&transcript_path)
+        .map_err(|error| format!("Could not read transcript: {error}"))
+}
+
+fn download_audio(
+    video_url: &str,
+    output_template: &Path,
+) -> Result<(), String> {
+    let output = Command::new("/usr/local/bin/yt-dlp-linux")
+        .arg("--ignore-config")
+        .arg("--no-playlist")
+        .arg("--extract-audio")
+        .arg("--audio-format")
+        .arg("wav")
+        .arg("--output")
+        .arg(output_template)
+        .arg(video_url)
+        .output()
+        .map_err(|error| {
+            format!("Could not start yt-dlp: {error}")
+        })?;
+
+    ensure_command_succeeded("yt-dlp", &output)
+}
+
+fn get_whisper_python_path() -> Result<PathBuf, String> {
+    let home = std::env::var("HOME")
+        .map_err(|_| "Could not determine HOME directory.".to_string())?;
+
+    let python_path = PathBuf::from(home)
+        .join(".pyenv")
+        .join("versions")
+        .join("whisper-py312")
+        .join("bin")
+        .join("python");
+
+    if !python_path.exists() {
+        return Err(format!(
+            "Whisper Python environment was not found at {}",
+            python_path.display()
+        ));
+    }
+
+    Ok(python_path)
+}
+
+fn transcribe_audio(
+    audio_path: &Path,
+    output_directory: &Path,
+) -> Result<(), String> {
+    let python_path = get_whisper_python_path()?;
+
+    let output = Command::new(&python_path)
+        .env_remove("PYTHONHOME")
+        .env_remove("PYTHONPATH")
+        .arg("-m")
+        .arg("whisper")
+        .arg(audio_path)
+        .arg("--model")
+        .arg("turbo")
+        .arg("--output_format")
+        .arg("txt")
+        .arg("--output_dir")
+        .arg(output_directory)
+        .arg("--verbose")
+        .arg("False")
+        .output()
+        .map_err(|error| {
+            format!(
+                "Could not start Whisper using {}: {error}",
+                python_path.display()
+            )
+        })?;
+
+    ensure_command_succeeded("Whisper", &output)
+}
+
+fn ensure_command_succeeded(
+    command_name: &str,
+    output: &Output,
+) -> Result<(), String> {
+    if output.status.success() {
+        return Ok(());
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    let details = if !stderr.trim().is_empty() {
+        stderr.trim()
+    } else if !stdout.trim().is_empty() {
+        stdout.trim()
+    } else {
+        "No additional error details were returned."
+    };
+
+    Err(format!(
+        "{command_name} failed with status {}:\n{details}",
+        output.status
+    ))
+}
+
+fn validate_video_url(video_url: &str) -> Result<(), String> {
+    let parsed_url = Url::parse(video_url)
+        .map_err(|_| "The entered value is not a valid URL.".to_string())?;
+
+    match parsed_url.scheme() {
+        "http" | "https" => Ok(()),
+        _ => Err("Only HTTP and HTTPS URLs are supported.".to_string()),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   dotenv().ok();
@@ -324,7 +491,8 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![search_brave,search_news_brave,search_videos_brave,search_images_brave,save_brave_data,load_brave_data])
+    .invoke_handler(tauri::generate_handler![search_brave,search_news_brave,search_videos_brave,search_images_brave,
+        save_brave_data,load_brave_data,transcribe_video_url])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

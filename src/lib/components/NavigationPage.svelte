@@ -7,6 +7,7 @@
 		{ path: "/news", label: "News" },
 		{ path: "/videos", label: "Videos" },
 		{ path: "/images", label: "Images" },
+		{ path: "/v2a", label: "V2T" },
 		{ path: "/workspace", label: "Workspace" },
 	];
 </script>

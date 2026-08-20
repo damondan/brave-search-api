@@ -1,5 +1,5 @@
-import {type WebResult} from '$lib/types/searchWebResultsInterface';
-import {type NewsResult} from '$lib/types/newsResultsInterface';
+import { type WebResult } from '$lib/types/searchWebResultsInterface';
+import { type NewsResult } from '$lib/types/newsResultsInterface';
 import { type VideosResult } from '$lib/types/videoResultsInterface';
 import { type ImagesResult } from '$lib/types/imagesResultsInterface';
 
@@ -35,4 +35,7 @@ export const imagesSelectionState = $state<ImagesSelectionState>({
 	selectedImagesResults: []
 });
 
-
+export let v2aprevSearchesWritable = $state<string[]>([]);
+export const transcriptState = $state({
+	transcript: ''
+});
