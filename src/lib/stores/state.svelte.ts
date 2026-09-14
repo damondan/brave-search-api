@@ -39,3 +39,5 @@ export let v2aprevSearchesWritable = $state<string[]>([]);
 export const transcriptState = $state({
 	transcript: ''
 });
+
+

@@ -42,6 +42,8 @@
 				videoUrl
 			});
 
+			await invoke<string>('exe_completion_sound');
+
 			console.log('Transcript:', transcriptState.transcript);
 		} catch (error) {
 			console.error('Transcription failed:', error);
@@ -51,7 +53,6 @@
 		}
 	}
 
-	function handleLoadingChange() {}
 </script>
 
 <div class="background min-h-screen w-full bg-black">

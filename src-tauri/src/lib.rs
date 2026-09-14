@@ -474,6 +474,17 @@ fn validate_video_url(video_url: &str) -> Result<(), String> {
     }
 }
 
+#[tauri::command]
+fn exe_completion_sound() {
+    // Play notification sound. Do not fail if the sound cannot play.
+    if Path::new("/usr/bin/paplay").exists() {
+        Command::new("/usr/bin/paplay")
+            .arg("/usr/share/sounds/freedesktop/stereo/complete.oga")
+            .spawn()
+            .ok();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   dotenv().ok();
@@ -492,10 +503,12 @@ pub fn run() {
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![search_brave,search_news_brave,search_videos_brave,search_images_brave,
-        save_brave_data,load_brave_data,transcribe_video_url])
+        save_brave_data,load_brave_data,transcribe_video_url,exe_completion_sound,])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
+
+
 
 
 
